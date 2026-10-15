@@ -1,54 +1,345 @@
 .Home {
-	max-width: 960px;
-	margin: 0 auto;
-}
-
-.Home > section:first-child {
-	text-align: center;
-	margin: 3rem auto;
-	max-width: 680px;
-}
-
-.Home h1 {
-	font-weight: 600;
-}
-
-.Home :global(.card) {
-	margin-bottom: 2rem;
-}
-
-.Home h2 {
-	margin-top: 0;
-	font-size: 1.15rem;
-}
-
-.cards {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 1.5rem;
-	margin-bottom: 2rem;
-}
-
-.cards :global(.card) {
-	margin-bottom: 0;
-}
-
-.prompts {
 	display: flex;
 	flex-direction: column;
-	gap: 0.5rem;
-	padding-left: 0;
-	list-style: none;
+	gap: 4rem;
 }
 
-.prompts code {
-	white-space: normal;
+/* ── Hero ─────────────────────────────────────────────────────────────────── */
+
+.hero {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 3rem;
+	align-items: center;
+	padding: 3rem 0 2rem;
+}
+
+.heroContent {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+.badge {
 	display: inline-block;
-	padding: 0.3rem 0.5rem;
+	background: var(--color-accent-dim);
+	color: var(--color-accent);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	padding: 0.35rem 0.85rem;
+	border-radius: var(--radius-full);
+	width: fit-content;
 }
 
-@media (max-width: 800px) {
-	.cards {
+.heroTitle {
+	font-size: clamp(2rem, 4vw, 3rem);
+	font-weight: 800;
+	line-height: 1.15;
+	color: var(--color-text);
+	margin: 0;
+}
+
+.heroAccent {
+	color: var(--color-accent);
+}
+
+.heroSubtitle {
+	font-size: 1.05rem;
+	color: var(--color-text-muted);
+	line-height: 1.7;
+	margin: 0;
+	max-width: 44ch;
+}
+
+.heroActions {
+	display: flex;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	margin-top: 0.5rem;
+}
+
+.btnPrimary {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	background: var(--color-accent);
+	color: #FAF8F5;
+	font-weight: 600;
+	font-size: 0.95rem;
+	padding: 0.7rem 1.4rem;
+	border-radius: var(--radius-full);
+	text-decoration: none;
+	transition: background 0.15s;
+}
+
+.btnPrimary:hover {
+	background: var(--color-accent-hover);
+	color: #FAF8F5;
+}
+
+.btnSecondary {
+	display: inline-flex;
+	align-items: center;
+	background: transparent;
+	color: var(--color-accent);
+	font-weight: 600;
+	font-size: 0.95rem;
+	padding: 0.7rem 1.4rem;
+	border-radius: var(--radius-full);
+	border: 1.5px solid var(--color-accent);
+	text-decoration: none;
+	transition: background 0.15s;
+}
+
+.btnSecondary:hover {
+	background: var(--color-accent-dim);
+}
+
+.btnHint {
+	font-size: 0.9rem;
+	color: var(--color-text-muted);
+	padding: 0.7rem 0;
+}
+
+/* ── Pet card visual ──────────────────────────────────────────────────────── */
+
+.heroVisual {
+	display: flex;
+	justify-content: center;
+}
+
+.petCard {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-md);
+	padding: 1.5rem;
+	width: 100%;
+	max-width: 320px;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.petCardHeader {
+	display: flex;
+	align-items: center;
+	gap: 0.85rem;
+}
+
+.petAvatar {
+	font-size: 2.2rem;
+	background: var(--color-surface-alt);
+	width: 52px;
+	height: 52px;
+	border-radius: var(--radius);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.petName {
+	font-weight: 700;
+	font-size: 1.1rem;
+	color: var(--color-text);
+}
+
+.petBreed {
+	font-size: 0.8rem;
+	color: var(--color-text-muted);
+}
+
+.petIdBadge {
+	margin-left: auto;
+	font-size: 0.7rem;
+	font-weight: 700;
+	font-family: monospace;
+	background: var(--color-accent-dim);
+	color: var(--color-accent);
+	padding: 0.2rem 0.5rem;
+	border-radius: var(--radius-full);
+	white-space: nowrap;
+}
+
+.petCardBody {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+	border-top: 1px solid var(--color-border-subtle);
+	border-bottom: 1px solid var(--color-border-subtle);
+	padding: 0.75rem 0;
+}
+
+.petStat {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 0.85rem;
+}
+
+.petStatLabel {
+	color: var(--color-text-muted);
+}
+
+.petStatValue {
+	font-weight: 600;
+	color: var(--color-text);
+}
+
+.petStatValueOk {
+	font-weight: 600;
+	color: var(--color-success);
+}
+
+.petCardFooter {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.qrPlaceholder {
+	width: 56px;
+	height: 56px;
+	flex-shrink: 0;
+}
+
+.qrGrid {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: 2px;
+	width: 100%;
+	height: 100%;
+}
+
+.qrCell {
+	background: var(--color-accent);
+	border-radius: 1px;
+}
+
+.petCardFooterText {
+	font-size: 0.8rem;
+	color: var(--color-text-muted);
+}
+
+/* ── Features ─────────────────────────────────────────────────────────────── */
+
+.features {
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+}
+
+.sectionTitle {
+	font-size: 1.6rem;
+	font-weight: 700;
+	color: var(--color-text);
+	text-align: center;
+	margin: 0;
+}
+
+.featureGrid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 1.25rem;
+}
+
+.featureCard {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	padding: 1.5rem;
+	box-shadow: var(--shadow);
+	transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.featureCard:hover {
+	box-shadow: var(--shadow-md);
+	transform: translateY(-2px);
+}
+
+.featureIcon {
+	font-size: 1.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.featureCard h3 {
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: var(--color-text);
+	margin: 0 0 0.4rem;
+}
+
+.featureCard p {
+	font-size: 0.85rem;
+	color: var(--color-text-muted);
+	line-height: 1.6;
+	margin: 0;
+}
+
+/* ── CTA ──────────────────────────────────────────────────────────────────── */
+
+.cta {
+	background: var(--color-accent);
+	border-radius: var(--radius-lg);
+	padding: 3rem 2rem;
+	text-align: center;
+	color: #FAF8F5;
+}
+
+.ctaContent {
+	max-width: 500px;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.cta h2 {
+	font-size: 1.75rem;
+	font-weight: 800;
+	margin: 0;
+	color: #FAF8F5;
+}
+
+.cta p {
+	font-size: 1rem;
+	opacity: 0.9;
+	margin: 0;
+	color: #FAF8F5;
+}
+
+.ctaNote {
+	font-size: 0.85rem !important;
+	opacity: 0.7 !important;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+	.hero {
 		grid-template-columns: 1fr;
+		gap: 2rem;
+		padding: 2rem 0;
+	}
+
+	.heroVisual {
+		order: -1;
+	}
+
+	.featureGrid {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+@media (max-width: 480px) {
+	.featureGrid {
+		grid-template-columns: 1fr;
+	}
+
+	.heroTitle {
+		font-size: 1.75rem;
 	}
 }

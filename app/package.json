@@ -14,14 +14,18 @@
     "contracts:build": "stellar scaffold build --build-clients"
   },
   "dependencies": {
-    "@cavos/kit": "0.2.5",
+    "@cavos/kit": "0.4.2",
     "@stellar-scaffold/app-lib": "*",
     "@stellar/stellar-sdk": "^16.0.1",
+    "@supabase/supabase-js": "^2.117.3",
     "@tanstack/react-query": "^5.90.17",
     "@theahaco/contract-explorer": "^1.1.0",
     "@theahaco/ts-config": "^1.3.0",
     "@trustless-work/escrow": "3.0.5",
+    "@types/qrcode": "^1.5.5",
     "lossless-json": "^4.3.0",
+    "qrcode": "^1.5.4",
+    "qrcode-svg": "^1.1.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.12.0"

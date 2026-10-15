@@ -42,6 +42,7 @@ app-lib/clients/*
 # Agent harness local-only state (skills and shared config ARE committed)
 .claude/settings.local.json
 .claude/worktrees/
+.claude/launch.json
 
 # TypeScript incremental build info
 *.tsbuildinfo

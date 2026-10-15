@@ -1,0 +1,449 @@
+.page {
+	max-width: 1100px;
+	margin: 0 auto;
+	padding: 2.5rem 1.5rem 4rem;
+}
+
+/* ── Breadcrumb ────────────────────────────────────────────────────────────── */
+
+.breadcrumb {
+	font-size: 0.85rem;
+	color: var(--color-text-muted);
+	margin-bottom: 1.5rem;
+}
+
+.breadcrumb a {
+	color: var(--color-accent);
+	text-decoration: none;
+}
+
+.breadcrumb a:hover {
+	text-decoration: underline;
+}
+
+/* ── Two-column layout ─────────────────────────────────────────────────────── */
+
+.layout {
+	display: grid;
+	grid-template-columns: 400px 1fr;
+	gap: 2rem;
+	align-items: start;
+}
+
+/* ── Not found ─────────────────────────────────────────────────────────────── */
+
+.notFound {
+	text-align: center;
+	padding: 5rem 2rem;
+}
+
+.notFound span {
+	font-size: 3rem;
+	display: block;
+	margin-bottom: 1rem;
+}
+
+.notFound h2 {
+	margin: 0 0 0.5rem;
+}
+
+.notFound p {
+	color: var(--color-text-muted);
+	margin: 0 0 1.5rem;
+}
+
+/* ── Passport card ─────────────────────────────────────────────────────────── */
+
+.passportWrapper {
+	position: sticky;
+	top: 88px;
+}
+
+.passport {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	overflow: hidden;
+	box-shadow: var(--shadow-md);
+}
+
+.passportHeader {
+	background: var(--color-accent);
+	color: #fff;
+	padding: 0.75rem 1.25rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.passportBrand {
+	font-weight: 800;
+	font-size: 1rem;
+	letter-spacing: -0.01em;
+}
+
+.passportLabel {
+	font-size: 0.7rem;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	opacity: 0.85;
+}
+
+.passportPhoto {
+	height: 200px;
+	background: var(--color-surface-alt);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.passportImg {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.passportEmoji {
+	font-size: 5rem;
+	opacity: 0.7;
+}
+
+.passportBody {
+	padding: 1.25rem;
+}
+
+.passportName {
+	margin: 0 0 0.2rem;
+	font-size: 1.5rem;
+	font-weight: 800;
+	color: var(--color-text);
+}
+
+.passportSpecies {
+	margin: 0 0 1.25rem;
+	font-size: 0.9rem;
+	color: var(--color-text-muted);
+}
+
+/* ── Passport fields ───────────────────────────────────────────────────────── */
+
+.passportFields {
+	display: grid;
+	gap: 0.6rem;
+	margin: 0 0 1.25rem;
+}
+
+.passportField {
+	display: grid;
+	grid-template-columns: 110px 1fr;
+	gap: 0.5rem;
+	align-items: baseline;
+}
+
+.passportField dt {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.passportField dd {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--color-text);
+}
+
+.vetIdValue {
+	font-family: "Inconsolata", monospace;
+	font-weight: 700;
+	font-size: 1rem !important;
+	color: var(--color-accent) !important;
+}
+
+.addressValue {
+	font-family: "Inconsolata", monospace;
+	font-size: 0.8rem !important;
+}
+
+.passportField code {
+	font-family: "Inconsolata", monospace;
+	font-size: 0.8rem;
+}
+
+/* ── Stellar status ────────────────────────────────────────────────────────── */
+
+.stellarStatus {
+	border-radius: var(--radius);
+	padding: 0.875rem 1rem;
+	margin-bottom: 1.25rem;
+}
+
+.stellar_local {
+	background: rgba(107, 107, 107, 0.08);
+	border: 1px solid rgba(107, 107, 107, 0.2);
+}
+
+.stellar_pending {
+	background: rgba(200, 168, 233, 0.15);
+	border: 1px solid rgba(200, 168, 233, 0.4);
+}
+
+.stellar_registered {
+	background: rgba(46, 125, 82, 0.08);
+	border: 1px solid rgba(46, 125, 82, 0.2);
+}
+
+.stellarStatusHeader {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.35rem;
+}
+
+.stellarDot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: currentColor;
+	flex-shrink: 0;
+}
+
+.stellar_local .stellarDot { background: var(--color-text-muted); }
+.stellar_pending .stellarDot { background: #7b3f99; }
+.stellar_registered .stellarDot { background: var(--color-success); }
+
+.stellarStatusDesc {
+	margin: 0 0 0.35rem;
+	font-size: 0.8rem;
+	color: var(--color-text-muted);
+}
+
+.stellarNote {
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--color-text-muted);
+	font-style: italic;
+}
+
+/* ── QR section ────────────────────────────────────────────────────────────── */
+
+.qrSection {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	padding-top: 0.5rem;
+	border-top: 1px solid var(--color-border);
+}
+
+.qr {
+	width: 140px;
+	height: 140px;
+	border-radius: var(--radius);
+}
+
+.qrCaption {
+	font-size: 0.72rem;
+	color: var(--color-text);
+	text-align: center;
+	margin: 0;
+	max-width: 220px;
+}
+
+.qrCaptionSub {
+	font-size: 0.68rem;
+	color: var(--color-text-muted);
+	text-align: center;
+	margin: 0.15rem 0 0;
+	max-width: 220px;
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────────────────── */
+
+.sidebar {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.sideCard {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	padding: 1.25rem;
+}
+
+.sideTitle {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: var(--color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	margin: 0 0 0.875rem;
+}
+
+.sideNote {
+	font-size: 0.8rem;
+	color: var(--color-text-muted);
+	margin: 0.5rem 0 0;
+}
+
+/* ── Status pill ───────────────────────────────────────────────────────────── */
+
+.statusPill {
+	display: inline-block;
+	font-size: 0.8rem;
+	font-weight: 600;
+	padding: 0.35rem 0.85rem;
+	border-radius: var(--radius-full);
+}
+
+.pill_local {
+	background: rgba(107, 107, 107, 0.1);
+	color: var(--color-text-muted);
+}
+
+.pill_pending {
+	background: rgba(200, 168, 233, 0.2);
+	color: #7b3f99;
+}
+
+.pill_registered {
+	background: rgba(46, 125, 82, 0.1);
+	color: var(--color-success);
+}
+
+/* ── ID list ───────────────────────────────────────────────────────────────── */
+
+.idList {
+	display: grid;
+	gap: 0.6rem;
+	margin: 0;
+}
+
+.idList dt {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin: 0;
+}
+
+.idList dd {
+	margin: 0 0 0.25rem;
+}
+
+.codeValue {
+	font-family: "Inconsolata", monospace;
+	font-weight: 700;
+	font-size: 1rem;
+	color: var(--color-accent);
+}
+
+.codeValueSmall {
+	font-family: "Inconsolata", monospace;
+	font-size: 0.72rem;
+	color: var(--color-text-muted);
+	word-break: break-all;
+}
+
+/* ── Actions ───────────────────────────────────────────────────────────────── */
+
+.actionList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.btnAction {
+	background: var(--color-surface-alt);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius);
+	padding: 0.6rem 1rem;
+	font-size: 0.875rem;
+	font-family: inherit;
+	color: var(--color-text);
+	cursor: pointer;
+	text-align: left;
+	transition: background 0.2s;
+}
+
+.btnAction:hover {
+	background: var(--color-border);
+}
+
+.btnActionDanger {
+	background: transparent;
+	border: 1px solid rgba(192, 57, 43, 0.25);
+	border-radius: var(--radius);
+	padding: 0.6rem 1rem;
+	font-size: 0.875rem;
+	font-family: inherit;
+	color: var(--color-error);
+	cursor: pointer;
+	text-align: left;
+	transition: background 0.2s;
+}
+
+.btnActionDanger:hover {
+	background: rgba(192, 57, 43, 0.06);
+}
+
+.btnPrimary {
+	display: inline-block;
+	background: var(--color-accent);
+	color: #fff;
+	padding: 0.65rem 1.25rem;
+	border-radius: var(--radius-full);
+	font-weight: 600;
+	font-size: 0.9rem;
+	text-decoration: none;
+	transition: background 0.2s;
+}
+
+.btnPrimary:hover {
+	background: var(--color-accent-hover);
+}
+
+/* ── Disclaimer ────────────────────────────────────────────────────────────── */
+
+.disclaimer {
+	font-size: 0.75rem;
+	color: var(--color-text-muted);
+	text-align: center;
+	margin: 0;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+	.layout {
+		grid-template-columns: 1fr;
+	}
+
+	.passportWrapper {
+		position: static;
+	}
+}
+
+@media (max-width: 480px) {
+	.page {
+		padding: 1.5rem 1rem 3rem;
+	}
+}
+
+/* ── Print ─────────────────────────────────────────────────────────────────── */
+
+@media print {
+	.sidebar {
+		display: none;
+	}
+
+	.passportWrapper {
+		position: static;
+	}
+}

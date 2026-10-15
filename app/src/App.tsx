@@ -1,17 +1,23 @@
-import { labPrefix } from "@stellar-scaffold/app-lib"
 import { NavLink, Outlet, Route, Routes } from "react-router-dom"
 import styles from "./App.module.css"
 import ConnectAccount from "./components/ConnectAccount"
 import Debug from "./pages/Debug"
-import Escrows from "./pages/Escrows"
 import Home from "./pages/Home"
+import Mascotas from "./pages/Mascotas"
+import MascotaNueva from "./pages/MascotaNueva"
+import MascotaDetalle from "./pages/MascotaDetalle"
+import PasaportePublico from "./pages/PasaportePublico"
 
 function App() {
 	return (
 		<Routes>
+			{/* Public passport route — no layout chrome */}
+			<Route path="/pasaporte/:vetId" element={<PasaportePublico />} />
 			<Route element={<AppLayout />}>
 				<Route path="/" element={<Home />} />
-				<Route path="/escrows" element={<Escrows />} />
+				<Route path="/mascotas" element={<Mascotas />} />
+				<Route path="/mascotas/nueva" element={<MascotaNueva />} />
+				<Route path="/mascotas/:id" element={<MascotaDetalle />} />
 				<Route path="/debug" element={<Debug />} />
 				<Route path="/debug/:contractName" element={<Debug />} />
 			</Route>
@@ -23,24 +29,23 @@ const AppLayout = () => (
 	<div className={styles.AppLayout}>
 		<header className={styles.header}>
 			<NavLink to="/" className={styles.logo}>
-				Scaffold Pura Vida
+				<span className={styles.logoMark}>⬡</span>
+				<span>Vetra</span>
 			</NavLink>
 			<nav className={styles.headerNav}>
 				<NavLink
-					to="/escrows"
+					to="/"
+					end
 					className={({ isActive }) => (isActive ? styles.active : "")}
 				>
-					Escrow Studio
+					Inicio
 				</NavLink>
 				<NavLink
-					to="/debug"
+					to="/mascotas"
 					className={({ isActive }) => (isActive ? styles.active : "")}
 				>
-					Contracts
+					Mis mascotas
 				</NavLink>
-				<a href={labPrefix()} target="_blank" rel="noreferrer">
-					Transaction Explorer
-				</a>
 			</nav>
 			<ConnectAccount />
 		</header>
@@ -50,32 +55,27 @@ const AppLayout = () => (
 		</main>
 
 		<footer className={styles.footer}>
-			<nav className={styles.footerNav}>
-				<a
-					href="https://github.com/stellar-scaffold/cli"
-					target="_blank"
-					rel="noreferrer"
-				>
-					Built on Scaffold Stellar
-				</a>
-				<a href="https://stellarscaffold.org" target="_blank" rel="noreferrer">
-					Scaffold docs
-				</a>
-				<a
-					href="https://docs.trustlesswork.com"
-					target="_blank"
-					rel="noreferrer"
-				>
-					Trustless Work docs
-				</a>
-				<a
-					href="https://developers.stellar.org"
-					target="_blank"
-					rel="noreferrer"
-				>
-					Stellar docs
-				</a>
-			</nav>
+			<div className={styles.footerInner}>
+				<div className={styles.footerBrand}>
+					<span className={styles.footerLogo}>
+						<span className={styles.logoMark}>⬡</span> Vetra
+					</span>
+					<p className={styles.footerTagline}>Una identidad, toda una vida.</p>
+				</div>
+				<nav className={styles.footerNav}>
+					<a
+						href="https://developers.stellar.org"
+						target="_blank"
+						rel="noreferrer"
+					>
+						Stellar Testnet
+					</a>
+				</nav>
+			</div>
+			<div className={styles.footerBottom}>
+				<span>© 2026 Vetra</span>
+				<span className={styles.testnetBadge}>TESTNET</span>
+			</div>
 		</footer>
 	</div>
 )

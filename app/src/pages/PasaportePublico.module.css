@@ -1,0 +1,257 @@
+.page {
+	min-height: 100vh;
+	background: var(--color-bg);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem 1rem;
+}
+
+/* ── Card ───────────────────────────────────────────────────────────────────── */
+
+.card {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	overflow: hidden;
+	max-width: 380px;
+	width: 100%;
+	box-shadow: var(--shadow-lg);
+}
+
+.header {
+	background: var(--color-accent);
+	color: #fff;
+	padding: 0.75rem 1.25rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.brand {
+	font-weight: 800;
+	font-size: 1rem;
+}
+
+.label {
+	font-size: 0.65rem;
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	opacity: 0.85;
+}
+
+/* ── Photo ──────────────────────────────────────────────────────────────────── */
+
+.photoArea {
+	height: 180px;
+	background: var(--color-surface-alt);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.photo {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.emoji {
+	font-size: 5rem;
+	opacity: 0.65;
+}
+
+/* ── Body ───────────────────────────────────────────────────────────────────── */
+
+.body {
+	padding: 1.25rem;
+}
+
+.name {
+	font-size: 1.6rem;
+	font-weight: 800;
+	margin: 0 0 0.2rem;
+	color: var(--color-text);
+}
+
+.species {
+	margin: 0 0 1rem;
+	font-size: 0.9rem;
+	color: var(--color-text-muted);
+}
+
+/* ── Fields ─────────────────────────────────────────────────────────────────── */
+
+.fields {
+	display: grid;
+	gap: 0.5rem;
+	margin: 0 0 1rem;
+}
+
+.field {
+	display: grid;
+	grid-template-columns: 100px 1fr;
+	gap: 0.4rem;
+}
+
+.field dt {
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: var(--color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.field dd {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--color-text);
+}
+
+.vetIdValue {
+	font-family: "Inconsolata", monospace;
+	font-weight: 700;
+	font-size: 1rem !important;
+	color: var(--color-accent) !important;
+}
+
+/* ── Stellar badge ──────────────────────────────────────────────────────────── */
+
+.stellarBadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	padding: 0.35rem 0.75rem;
+	border-radius: var(--radius-full);
+	margin-bottom: 0.75rem;
+}
+
+.s_local {
+	background: rgba(107, 107, 107, 0.1);
+	color: var(--color-text-muted);
+}
+
+.s_pending {
+	background: rgba(200, 168, 233, 0.2);
+	color: #7b3f99;
+}
+
+.s_registered {
+	background: rgba(46, 125, 82, 0.1);
+	color: var(--color-success);
+}
+
+.dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: currentColor;
+	flex-shrink: 0;
+}
+
+.note {
+	font-size: 0.8rem;
+	color: var(--color-text-muted);
+	margin: 0 0 0.75rem;
+}
+
+.privacy {
+	font-size: 0.72rem;
+	color: var(--color-text-muted);
+	border-top: 1px solid var(--color-border);
+	padding-top: 0.75rem;
+	margin: 0;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────────── */
+
+.footer {
+	background: var(--color-surface-alt);
+	padding: 0.6rem 1.25rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.75rem;
+	color: var(--color-text-muted);
+}
+
+.footerLink {
+	color: var(--color-accent);
+	text-decoration: none;
+	font-weight: 600;
+}
+
+.footerSep {
+	opacity: 0.4;
+}
+
+/* ── Not found ──────────────────────────────────────────────────────────────── */
+
+.notFound {
+	text-align: center;
+	max-width: 400px;
+}
+
+.nfIcon {
+	font-size: 3rem;
+	display: block;
+	margin-bottom: 1rem;
+}
+
+.notFound h1 {
+	font-size: 1.4rem;
+	margin: 0 0 0.75rem;
+}
+
+.notFound p {
+	color: var(--color-text-muted);
+	font-size: 0.875rem;
+	margin: 0 0 0.75rem;
+}
+
+.notFound code {
+	font-family: "Inconsolata", monospace;
+	font-weight: 700;
+	color: var(--color-accent);
+}
+
+.hint {
+	font-style: italic;
+}
+
+.localOnlyBox {
+	background: var(--color-surface-alt);
+	border: 1px solid var(--color-border);
+	border-left: 3px solid var(--color-accent-light);
+	border-radius: var(--radius);
+	padding: 1rem 1.25rem;
+	text-align: left;
+	margin: 0.75rem 0 1rem;
+}
+
+.localOnlyBox p {
+	margin: 0.4rem 0 0;
+	font-size: 0.82rem;
+	color: var(--color-text-muted);
+	font-style: normal;
+}
+
+.btn {
+	display: inline-block;
+	background: var(--color-accent);
+	color: #fff;
+	padding: 0.6rem 1.25rem;
+	border-radius: var(--radius-full);
+	font-weight: 600;
+	text-decoration: none;
+	font-size: 0.9rem;
+	margin-top: 0.5rem;
+}
+
+.btn:hover {
+	background: var(--color-accent-hover);
+}

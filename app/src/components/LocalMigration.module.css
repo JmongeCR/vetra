@@ -1,0 +1,173 @@
+.banner {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-left: 3px solid var(--color-accent-light);
+	border-radius: var(--radius-lg);
+	padding: 1rem 1.25rem;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 1.5rem;
+	flex-wrap: wrap;
+}
+
+.icon {
+	font-size: 1.4rem;
+	flex-shrink: 0;
+}
+
+.text {
+	flex: 1;
+	font-size: 0.875rem;
+	color: var(--color-text);
+	min-width: 200px;
+}
+
+.btn {
+	background: var(--color-accent);
+	color: #fff;
+	border: none;
+	border-radius: var(--radius-full);
+	padding: 0.45rem 1rem;
+	font-size: 0.875rem;
+	font-family: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background 0.2s;
+}
+
+.btn:hover { background: var(--color-accent-hover); }
+
+/* ── Preview ──────────────────────────────────────────────────────────────── */
+
+.preview {
+	width: 100%;
+}
+
+.previewTitle {
+	margin: 0 0 0.75rem;
+	font-size: 1rem;
+	font-weight: 700;
+}
+
+.petList {
+	list-style: none;
+	padding: 0;
+	margin: 0 0 0.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.petItem {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.875rem;
+}
+
+.petEmoji { font-size: 1.2rem; }
+
+.petMeta {
+	color: var(--color-text-muted);
+	font-size: 0.8rem;
+}
+
+.note {
+	font-size: 0.8rem;
+	color: var(--color-text-muted);
+	margin: 0 0 0.875rem;
+}
+
+.actions {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.btnPrimary {
+	background: var(--color-accent);
+	color: #fff;
+	border: none;
+	border-radius: var(--radius-full);
+	padding: 0.5rem 1.25rem;
+	font-size: 0.875rem;
+	font-family: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+
+.btnPrimary:hover { background: var(--color-accent-hover); }
+.btnPrimary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btnSecondary {
+	background: transparent;
+	color: var(--color-text-muted);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-full);
+	padding: 0.5rem 1rem;
+	font-size: 0.875rem;
+	font-family: inherit;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+
+.btnSecondary:hover { background: var(--color-surface-alt); }
+
+/* ── Progress ─────────────────────────────────────────────────────────────── */
+
+.progress {
+	width: 100%;
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+}
+
+.spinner {
+	width: 18px;
+	height: 18px;
+	border: 2px solid var(--color-border);
+	border-top-color: var(--color-accent);
+	border-radius: 50%;
+	animation: spin 0.8s linear infinite;
+	flex-shrink: 0;
+	margin-top: 2px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.resultList {
+	list-style: none;
+	padding: 0;
+	margin: 0.5rem 0 0;
+	font-size: 0.8rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+}
+
+.result_imported { color: var(--color-success); }
+.result_skipped  { color: var(--color-text-muted); }
+.result_error    { color: var(--color-error); }
+
+/* ── Done ─────────────────────────────────────────────────────────────────── */
+
+.done {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+}
+
+/* ── Error ────────────────────────────────────────────────────────────────── */
+
+.error {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	font-size: 0.875rem;
+	color: var(--color-error);
+}
