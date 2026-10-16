@@ -75,7 +75,14 @@ export async function updateAccessRequestStatus(
 
 	const fn = status === "approved" ? "approve_access_request" : "reject_access_request"
 	const { error } = await supabase.rpc(fn, { p_request_id: id })
-	if (error) return { ok: false, error: error.message }
+	if (error) {
+		const msg = error.message.includes("request_expired")
+			? "La solicitud ya venció y no puede procesarse."
+			: error.message.includes("not_authorized")
+			  ? "No tenés permiso para esta acción."
+			  : error.message
+		return { ok: false, error: msg }
+	}
 	return { ok: true }
 }
 

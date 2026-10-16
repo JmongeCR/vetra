@@ -163,10 +163,11 @@ CREATE POLICY "access_requests: owner read"
     ON access_requests FOR SELECT
     USING (is_guardian_of(pet_id));
 
--- access_requests: owner can update status (approve/reject)
-CREATE POLICY "access_requests: owner update status"
-    ON access_requests FOR UPDATE
-    USING (is_guardian_of(pet_id));
+-- access_requests: owner updates status ONLY via approve_access_request /
+-- reject_access_request SECURITY DEFINER functions. No direct UPDATE policy
+-- is granted here because a direct UPDATE to status='approved' would leave
+-- the consents table without a row (breaking the authorization flow).
+-- The SECURITY DEFINER functions bypass RLS themselves, so no policy is needed.
 
 -- access_requests: clinic staff can insert
 CREATE POLICY "access_requests: clinic staff insert"
@@ -225,6 +226,7 @@ BEGIN
     SELECT * INTO v_req FROM access_requests WHERE id = p_request_id FOR UPDATE;
     IF NOT FOUND THEN RAISE EXCEPTION 'request_not_found'; END IF;
     IF v_req.status <> 'pending' THEN RAISE EXCEPTION 'request_not_pending'; END IF;
+    IF v_req.expires_at IS NOT NULL AND v_req.expires_at < now() THEN RAISE EXCEPTION 'request_expired'; END IF;
     IF NOT is_guardian_of(v_req.pet_id) THEN RAISE EXCEPTION 'not_authorized'; END IF;
 
     SELECT id INTO v_prof_id FROM profiles WHERE auth_user_id = auth.uid();
@@ -255,6 +257,7 @@ BEGIN
     SELECT * INTO v_req FROM access_requests WHERE id = p_request_id FOR UPDATE;
     IF NOT FOUND THEN RAISE EXCEPTION 'request_not_found'; END IF;
     IF v_req.status <> 'pending' THEN RAISE EXCEPTION 'request_not_pending'; END IF;
+    IF v_req.expires_at IS NOT NULL AND v_req.expires_at < now() THEN RAISE EXCEPTION 'request_expired'; END IF;
     IF NOT is_guardian_of(v_req.pet_id) THEN RAISE EXCEPTION 'not_authorized'; END IF;
 
     UPDATE access_requests SET status = 'rejected' WHERE id = p_request_id;
