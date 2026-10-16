@@ -1,107 +1,46 @@
-# Vetra — Una identidad, toda una vida
+# Vetra — Una identidad, toda una vida.
 
-**Plataforma de identidad digital veterinaria sobre Stellar Testnet.**
+Cada mascota merece un historial médico seguro, verificable y accesible en cualquier momento.
 
-Vetra asigna a cada mascota un identificador universal permanente (`VET-XXXXXX`), anclado en la blockchain de Stellar, y sincroniza su historial con PostgreSQL (Supabase). Los propietarios se autentican con su billetera Stellar mediante una firma criptográfica; las veterinarias acceden a una app clínica independiente.
-
----
-
-## Arquitectura
-
-```
-Vetra/
-├── app/                   # Portal de propietarios (React 19 + Vite)
-├── app-clinic/            # Sistema clínico para veterinarias (React 19 + Vite)
-├── contracts/
-│   └── pet-identity/      # Contrato Soroban (Rust) — registro on-chain de identidades
-├── supabase/
-│   ├── functions/
-│   │   ├── auth-challenge/ # Edge Function — emite XDR de desafío Stellar
-│   │   └── auth-verify/    # Edge Function — verifica firma y emite JWT HS256
-│   └── migrations/        # 3 migraciones SQL (tablas, RLS, funciones SECURITY DEFINER)
-├── docs/                  # ARCHITECTURE.md, SECURITY.md, SUPABASE-SETUP.md
-└── VETRA.md               # Reglas y convenciones del proyecto
-```
-
-### Stack
-
-| Capa | Tecnología |
-|------|-----------|
-| Frontend | React 19, Vite, TypeScript, CSS Modules |
-| Billeteras | @cavos/kit 0.4.2 — login con email / Google, sin extensión |
-| Blockchain | Stellar Testnet · Soroban SDK 26 · ManageData auth challenge |
-| Base de datos | Supabase PostgreSQL · Row Level Security |
-| Auth custom | Edge Functions Deno · HS256 JWT via `accessToken` callback |
-| Contrato | Soroban Rust (pet-identity) — VET-ID permanente on-chain |
-
-### Flujo de autenticación
-
-```
-Usuario → Cavos (email/Google)
-        ↓  address + signTransaction disponibles
-        ↓  auth-challenge → XDR ManageData "vetra:auth" + nonce
-        ↓  wallet.signXdr(xdr) → modal de firma Cavos
-        ↓  auth-verify → 11 verificaciones criptográficas → JWT HS256
-        ↓  accessToken callback → PostgREST con RLS activo (auth.uid())
-```
+Vetra conecta a propietarios y veterinarias mediante una **identidad digital única y permanente** por animal — registrada en la blockchain de Stellar y sincronizada en la nube.
 
 ---
 
-## Funcionalidades actuales (Sprint 4)
+## ¿Qué problema resuelve?
 
-### Vetra Portal (`app/`)
-- Registro de mascotas con generación automática de `VET-XXXXXX`
-- Sincronización con Supabase PostgreSQL (RLS por guardian)
-- Autenticación sin contraseña: firma Stellar vía Cavos
-- Subida de foto al bucket `pet-photos` (Storage)
-- Pasaporte público en `/pasaporte/:vetId` — acceso anónimo sin login
-- Detalle de mascota editable (nombre, foto, microchip)
-- Fallback a localStorage cuando Supabase no está configurado
+Cuando llevás a tu mascota a una nueva veterinaria, empezás desde cero. No hay historial compartido, no hay forma de verificar vacunas ni tratamientos previos, y los registros en papel se pierden.
 
-### Vetra Clinic (`app-clinic/`)
-- Lista de pacientes con búsqueda y filtros (datos demo — Sprint 3 pendiente)
-- Tipos TypeScript para `Patient` compartidos con el portal
-
-### Contratos Soroban (`contracts/pet-identity/`)
-- Registro de identidad (`register_identity`)
-- Consulta de identidad por `VET-ID`
-- Tests en `src/test.rs`
-
-### Backend Supabase
-- 3 migraciones SQL: tablas, RLS, `register_pet()` (atómica), `passport_view`
-- 2 Edge Functions: `auth-challenge` y `auth-verify`
-- Bucket `pet-photos` con políticas RLS de Storage
+Vetra le da a cada animal un identificador universal (`VET-XXXXXX`) que lo acompaña de por vida, sin importar dónde sea atendido.
 
 ---
 
-## Instalación
+## ¿Qué hace Vetra?
+
+- **Identidad permanente**: cada mascota recibe un `VET-XXXXXX` único, registrado on-chain en Stellar Testnet.
+- **Pasaporte digital público**: cualquier veterinaria puede escanear el VET-ID y ver los datos básicos del animal, sin necesidad de crear una cuenta.
+- **Sincronización segura**: los registros se guardan en PostgreSQL (Supabase) con políticas de acceso estrictas — solo el propietario ve sus mascotas.
+- **Login sin contraseña**: el propietario inicia sesión con su correo o Google a través de [Cavos](https://cavos.xyz), y firma criptográficamente con su billetera Stellar para confirmar su identidad.
+- **App para veterinarias**: Vetra Clinic es una interfaz separada para gestionar pacientes (en desarrollo).
+
+---
+
+## Instalación rápida
 
 ### Prerrequisitos
 
 - Node.js ≥ 18
-- Rust + `stellar contract` CLI (para compilar contratos)
-- Cuenta en [Supabase](https://supabase.com)
-- Cuenta en [Cavos](https://cavos.xyz/dashboard)
+- Una cuenta en [Supabase](https://supabase.com)
+- Una app en [Cavos](https://cavos.xyz/dashboard)
 
 ### 1. Clonar e instalar
 
 ```bash
-git clone https://github.com/<tu-usuario>/vetra.git
+git clone https://github.com/JmongeCR/vetra.git
 cd vetra
 npm install
 ```
 
-### 2. Configurar Supabase
-
-Seguí las instrucciones completas en [`docs/SUPABASE-SETUP.md`](docs/SUPABASE-SETUP.md):
-
-1. Crear proyecto en Supabase
-2. Ejecutar las 3 migraciones SQL (en orden)
-3. Crear bucket `pet-photos` con políticas RLS
-4. Desplegar Edge Functions
-5. Configurar el secret `JWT_SECRET`
-
-### 3. Configurar variables de entorno
+### 2. Configurar las variables de entorno
 
 ```bash
 cp app/.env.example app/.env
@@ -110,80 +49,39 @@ cp app/.env.example app/.env
 Completar en `app/.env`:
 
 ```env
-PUBLIC_CAVOS_APP_ID="<tu-app-id-de-cavos>"
-PUBLIC_CAVOS_ENVIRONMENT="development"
-PUBLIC_SUPABASE_URL="https://<tu-project-ref>.supabase.co"
-PUBLIC_SUPABASE_ANON_KEY="<tu-anon-key>"
+PUBLIC_CAVOS_APP_ID="tu-app-id"
+PUBLIC_SUPABASE_URL="https://tu-proyecto.supabase.co"
+PUBLIC_SUPABASE_ANON_KEY="tu-anon-key"
 ```
 
-> `app/.env` está en `.gitignore` — nunca se sube al repositorio.
+### 3. Configurar Supabase
 
-### 4. Configurar Cavos
+Seguí la guía completa en [`docs/SUPABASE-SETUP.md`](docs/SUPABASE-SETUP.md) para crear las tablas, el bucket de fotos y desplegar las funciones de autenticación.
 
-En el [dashboard de Cavos](https://cavos.xyz/dashboard), en tu app:
-- **Allowed web origins**: `http://localhost:5173`
-- **Redirect URIs**: `http://localhost:5173/`
-
-### 5. Levantar el servidor de desarrollo
+### 4. Levantar la app
 
 ```bash
 cd app
-npm run dev        # Solo Vite en http://localhost:5173
+npm run dev
 ```
 
-> **No ejecutar `npm start` desde la raíz** — despliega contratos en Testnet automáticamente.
-
-Para Vetra Clinic:
-
-```bash
-cd app-clinic
-npm run dev        # http://localhost:5174
-```
-
-### 6. Compilar contratos (opcional)
-
-```bash
-npm run contracts:build   # Compila + despliega en Testnet + genera clientes TS
-```
+Abrí [http://localhost:5173](http://localhost:5173) y conectá tu cuenta con Cavos.
 
 ---
 
-## Seguridad
+## Tecnología
 
-- **Sin secretos en el frontend**: solo variables `PUBLIC_*` llegan al navegador
-- **JWT firmado server-side**: `JWT_SECRET` solo existe en la Edge Function
-- **Nonces de un solo uso**: `consumed_at` atómico en `auth_challenges`
-- **RLS estricto**: `auth.uid()` derivado del `sub` del JWT — sin bypass posible
-- **CAVOS_APP_SALT invariante**: nunca cambiar `"scaffold-stellar-agentic"` — deriva las claves de billetera
-
-Ver [`docs/SECURITY.md`](docs/SECURITY.md) para detalles completos.
+Vetra está construido sobre [Scaffold Stellar](https://stellarscaffold.org) de [The Aha Company](https://theaha.co), con billeteras embebidas de [Cavos](https://cavos.xyz).
 
 ---
 
-## Estructura de la base de datos
+## Estado del proyecto
 
-| Tabla | Descripción |
-|-------|-------------|
-| `profiles` | Propietario — `auth_user_id` = `sub` del JWT |
-| `pets` | Mascota con `vet_id` único |
-| `pet_guardians` | Relación propietario ↔ mascota |
-| `stellar_identities` | Estado de registro on-chain (`local / pending / registered`) |
-| `public_passports` | Pasaporte público (acceso anónimo cuando `is_public = true`) |
-| `auth_challenges` | Nonces de un solo uso para el flujo de autenticación |
-
-Vista: `passport_view` — exposición segura de datos públicos sin joins manuales.
-
----
-
-## Roadmap
-
-- **Sprint 5**: Registro on-chain vía contrato `pet-identity`, integración Horizon
-- **Fase 2**: Vetra Clinic con base de datos real por veterinaria, permisos entre propietario y clínica
-- **Fase 3**: Vetra Core API (ASP.NET Core), multi-sucursal, historial consolidado por autorización
-
----
-
-## Créditos
-
-Construido sobre [Scaffold Stellar](https://stellarscaffold.org) de [The Aha Company](https://theaha.co).
-Billeteras embebidas por [Cavos](https://cavos.xyz).
+| Módulo | Estado |
+|--------|--------|
+| Registro de mascotas | ✅ Sprint 4 |
+| Autenticación Cavos + Stellar | ✅ Sprint 4 |
+| Pasaporte público | ✅ Sprint 4 |
+| Contrato Soroban (pet-identity) | 🔧 Sprint 5 |
+| Vetra Clinic (veterinarias) | 🔧 En desarrollo |
+| Historial clínico compartido | 📋 Planificado |
