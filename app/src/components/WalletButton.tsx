@@ -15,9 +15,9 @@ export const WalletButton = () => {
 		return (
 			<div className="wallet-connected">
 				<button onClick={() => void cavos.approveDevice()}>
-					Unlock wallet with passkey
+					Desbloquear con passkey
 				</button>
-				<button onClick={cavos.signOut}>Sign out</button>
+				<button onClick={cavos.signOut}>Cerrar sesión</button>
 			</div>
 		)
 	}
@@ -26,7 +26,7 @@ export const WalletButton = () => {
 		if (!cavos) {
 			return (
 				<button onClick={() => void connectWallet()} disabled={isPending}>
-					{isPending ? "Loading..." : "Connect"}
+					{isPending ? "Conectando..." : "Conectar billetera"}
 				</button>
 			)
 		}
@@ -36,15 +36,15 @@ export const WalletButton = () => {
 					className="wallet-primary"
 					onClick={cavos.signIn}
 					disabled={cavos.isLoading}
-					title="Email or Google: creates a Stellar wallet for you, no extension needed (Cavos)"
+					title="Correo o Google: crea una billetera Stellar automáticamente (Cavos)"
 				>
-					{cavos.isLoading ? "Signing in..." : "Sign in"}
+					{cavos.isLoading ? "Ingresando..." : "Iniciar sesión"}
 				</button>
 				<button
 					onClick={() => void connectWallet()}
 					title="Freighter, xBull, Lobstr… (Stellar Wallets Kit)"
 				>
-					Use a wallet
+					Usar billetera
 				</button>
 			</div>
 		)
@@ -68,7 +68,7 @@ export const WalletButton = () => {
 					>
 						{shortAddress(address)}
 					</button>
-					<button onClick={() => void disconnect()}>Sign out</button>
+					<button onClick={() => void disconnect()}>Cerrar sesión</button>
 				</>
 			) : (
 				<button className="wallet-profile" onClick={() => void profileModal()}>
