@@ -1,0 +1,260 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 900px;
+}
+
+/* ── Header ── */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.backBtn {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted, #a09990);
+  background: none;
+  border: 1px solid var(--color-border, #e8e4df);
+  border-radius: 8px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.1s, border-color 0.1s;
+}
+
+.backBtn:hover {
+  color: var(--color-accent, #8b5cf6);
+  border-color: var(--color-accent, #8b5cf6);
+}
+
+.headerInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.speciesIcon {
+  font-size: 2rem;
+}
+
+.patientName {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-text, #2c2724);
+  margin: 0 0 0.15rem;
+}
+
+.patientMeta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #a09990);
+}
+
+/* ── Tabs ── */
+
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-border, #e8e4df);
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.tab {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.65rem 1.1rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  background: none;
+  color: var(--color-text-muted, #a09990);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.1s, border-color 0.1s;
+}
+
+.tab:hover {
+  color: var(--color-text, #2c2724);
+}
+
+.tabActive {
+  color: var(--color-accent, #8b5cf6);
+  border-bottom-color: var(--color-accent, #8b5cf6);
+}
+
+/* ── Tab content ── */
+
+.tabContent {
+  flex: 1;
+}
+
+/* ── General tab ── */
+
+.generalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.infoCard {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e8e4df);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+}
+
+.infoCardTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted, #a09990);
+  margin: 0 0 0.85rem;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.infoRow dt {
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #a09990);
+  flex-shrink: 0;
+}
+
+.infoRow dd {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text, #2c2724);
+  margin: 0;
+  text-align: right;
+}
+
+.infoRow dd code {
+  font-size: 0.75rem;
+  background: var(--color-bg, #faf8f5);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.vetId {
+  color: var(--color-accent, #8b5cf6) !important;
+}
+
+.estimated {
+  font-size: 0.72rem;
+  color: var(--color-text-muted, #a09990);
+  font-weight: 400;
+}
+
+.ageTag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-accent, #8b5cf6);
+  background: rgba(139,92,246,0.1);
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  margin-left: 0.4rem;
+}
+
+.statusBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #15803d;
+  background: rgba(21,128,61,0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  border: 1px solid rgba(21,128,61,0.2);
+}
+
+/* ── Empty tab ── */
+
+.emptyTab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 200px;
+  border: 1px dashed var(--color-border, #e8e4df);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.emptyTabIcon {
+  font-size: 2rem;
+}
+
+.emptyTabLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text, #2c2724);
+  margin: 0;
+}
+
+.emptyTabNote {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-accent, #8b5cf6);
+  background: rgba(139,92,246,0.08);
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+}
+
+/* ── Not found ── */
+
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.notFoundIcon {
+  font-size: 2.5rem;
+}
+
+.notFound h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text, #2c2724);
+  margin: 0;
+}
+
+.notFound p {
+  font-size: 0.82rem;
+  color: var(--color-text-muted, #a09990);
+  margin: 0;
+}
+
+.btnBack {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border, #e8e4df);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-accent, #8b5cf6);
+  cursor: pointer;
+  margin-top: 0.5rem;
+}

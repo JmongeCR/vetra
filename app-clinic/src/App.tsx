@@ -1,136 +1,105 @@
-import { useState } from 'react'
 import { BrowserRouter, Routes, Route, NavLink, Outlet, useLocation } from 'react-router-dom'
 import './index.css'
 import styles from './App.module.css'
 import { useClinicAuth } from './hooks/useClinicAuth'
-import { clinicSupabaseConfigured } from './lib/supabase'
 import { ClinicAuthContext } from './contexts/clinicAuthContext'
+
+import LoginPage       from './pages/LoginPage'
 import RegistrarClinica from './pages/RegistrarClinica'
-import Pacientes from './pages/Pacientes'
-import Dashboard from './pages/Dashboard'
-import Solicitudes from './pages/Solicitudes'
-import ConsultasStub from './pages/ConsultasStub'
-import ExpedientesStub from './pages/ExpedientesStub'
-import PersonalStub from './pages/PersonalStub'
+import Dashboard        from './pages/Dashboard'
+import Agenda           from './pages/Agenda'
+import Pacientes        from './pages/Pacientes'
+import PacienteDetalle  from './pages/PacienteDetalle'
+import Solicitudes      from './pages/Solicitudes'
+import PersonalStub     from './pages/PersonalStub'
 import ConfiguracionStub from './pages/ConfiguracionStub'
 
-// ── Nav item definition ───────────────────────────────────────────────────────
+// ── Nav structure ──────────────────────────────────────────────────────────────
 
-interface NavItem {
-  to: string
-  icon: string
-  label: string
-}
+interface NavItem { to: string; icon: string; label: string }
 
-const NAV_ITEMS: NavItem[] = [
-  { to: '/',              icon: '📊', label: 'Dashboard' },
-  { to: '/pacientes',     icon: '🐾', label: 'Pacientes' },
-  { to: '/consultas',     icon: '📋', label: 'Consultas' },
-  { to: '/expedientes',   icon: '📁', label: 'Expedientes' },
-  { to: '/solicitudes',   icon: '🔔', label: 'Solicitudes' },
-  { to: '/personal',      icon: '👥', label: 'Personal' },
+const NAV_MAIN: NavItem[] = [
+  { to: '/',           icon: '⊞', label: 'Dashboard'   },
+  { to: '/agenda',     icon: '📅', label: 'Agenda'      },
+  { to: '/pacientes',  icon: '🐾', label: 'Pacientes'   },
+  { to: '/solicitudes',icon: '🔔', label: 'Solicitudes' },
+]
+
+const NAV_ADMIN: NavItem[] = [
+  { to: '/personal',      icon: '👥', label: 'Personal'      },
   { to: '/configuracion', icon: '⚙️',  label: 'Configuración' },
 ]
 
-// ── Page title helper ─────────────────────────────────────────────────────────
+// ── Page title helper ──────────────────────────────────────────────────────────
 
 function usePageTitle(): string {
   const { pathname } = useLocation()
-  const item = NAV_ITEMS.find((n) =>
-    n.to === '/' ? pathname === '/' : pathname.startsWith(n.to)
-  )
+  const all = [...NAV_MAIN, ...NAV_ADMIN]
+  if (pathname.startsWith('/pacientes/')) return 'Ficha de paciente'
+  const item = all.find((n) => n.to === '/' ? pathname === '/' : pathname.startsWith(n.to))
   return item?.label ?? 'Vetra Clinic'
 }
 
-// ── Inline login form ─────────────────────────────────────────────────────────
+// ── Clinic top-bar info ────────────────────────────────────────────────────────
 
-function TopBarAuth() {
-  const { user, member, loading, memberError, needsRegistration, signInWithEmail, signOut } = useClinicAuth()
-  const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
-  const [sending, setSending] = useState(false)
-  const [loginError, setLoginError] = useState<string | null>(null)
-
-  if (!clinicSupabaseConfigured) {
-    return <span className={styles.clinicLabel}>Supabase no configurado</span>
-  }
-
-  if (loading) {
-    return <span className={styles.clinicLabel}>Conectando…</span>
-  }
-
-  if (user && member) {
-    return (
-      <div className={styles.authBar}>
-        <span className={styles.clinicLabel}>{member.clinicName} · {member.role}</span>
-        <button className={styles.btnSignOut} onClick={() => void signOut()}>Salir</button>
-      </div>
-    )
-  }
-
-  if (user && needsRegistration) {
-    return (
-      <div className={styles.authBar}>
-        <span className={styles.clinicLabel}>Registrá tu clínica para continuar</span>
-        <button className={styles.btnSignOut} onClick={() => void signOut()}>Salir</button>
-      </div>
-    )
-  }
-
-  if (user && memberError) {
-    return (
-      <div className={styles.authBar}>
-        <span className={styles.authError}>{memberError}</span>
-        <button className={styles.btnSignOut} onClick={() => void signOut()}>Salir</button>
-      </div>
-    )
-  }
-
-  if (sent) {
-    return <span className={styles.clinicLabel}>✓ Revisá tu correo para el enlace de acceso</span>
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email.trim()) return
-    setSending(true)
-    setLoginError(null)
-    const res = await signInWithEmail(email.trim())
-    setSending(false)
-    if (res.ok) setSent(true)
-    else setLoginError(res.error ?? 'Error al enviar')
-  }
-
+function TopBarInfo() {
+  const { member, user, signOut } = useClinicAuth()
+  if (!user || !member) return null
   return (
-    <form className={styles.loginForm} onSubmit={(e) => void handleSubmit(e)}>
-      <input
-        className={styles.loginInput}
-        type="email"
-        placeholder="Correo de la clínica"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        disabled={sending}
-      />
-      <button className={styles.btnSignIn} type="submit" disabled={sending}>
-        {sending ? '…' : 'Entrar'}
-      </button>
-      {loginError && <span className={styles.authError}>{loginError}</span>}
-    </form>
+    <div className={styles.authBar}>
+      <span className={styles.clinicLabel}>{member.clinicName}</span>
+      <button className={styles.btnSignOut} onClick={() => void signOut()}>Salir</button>
+    </div>
   )
 }
 
-// ── Shell layout ──────────────────────────────────────────────────────────────
+// ── Nav link ───────────────────────────────────────────────────────────────────
+
+function NavItem({ item }: { item: NavItem }) {
+  return (
+    <NavLink
+      to={item.to}
+      end={item.to === '/'}
+      className={({ isActive }) =>
+        `${styles.navItem} ${isActive ? styles.navActive : ''}`
+      }
+    >
+      <span className={styles.navIcon}>{item.icon}</span>
+      <span className={styles.navLabel}>{item.label}</span>
+    </NavLink>
+  )
+}
+
+// ── Shell layout ───────────────────────────────────────────────────────────────
 
 function AppShell() {
-  const title = usePageTitle()
   const auth = useClinicAuth()
+  const title = usePageTitle()
 
-  // Authenticated but no clinic → show registration page (full screen)
-  if (auth.user && !auth.loading && auth.needsRegistration) {
+  // Unauthenticated → login screen
+  if (!auth.loading && !auth.user) {
+    return (
+      <ClinicAuthContext.Provider value={auth}>
+        <LoginPage />
+      </ClinicAuthContext.Provider>
+    )
+  }
+
+  // Authenticated but no clinic → registration
+  if (!auth.loading && auth.user && auth.needsRegistration) {
     return (
       <ClinicAuthContext.Provider value={auth}>
         <RegistrarClinica onRegistered={auth.refreshMembership} signOut={auth.signOut} />
       </ClinicAuthContext.Provider>
+    )
+  }
+
+  // Loading
+  if (auth.loading) {
+    return (
+      <div className={styles.loadingScreen}>
+        <span className={styles.loadingMark}>⬡</span>
+      </div>
     )
   }
 
@@ -148,24 +117,16 @@ function AppShell() {
           </div>
 
           <nav className={styles.sidebarNav}>
-            {NAV_ITEMS.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/'}
-                className={({ isActive }) =>
-                  `${styles.navItem} ${isActive ? styles.navActive : ''}`
-                }
-              >
-                <span className={styles.navIcon}>{item.icon}</span>
-                <span className={styles.navLabel}>{item.label}</span>
-              </NavLink>
-            ))}
+            {NAV_MAIN.map((item) => <NavItem key={item.to} item={item} />)}
+
+            <div className={styles.navSection}>Administración</div>
+            {NAV_ADMIN.map((item) => <NavItem key={item.to} item={item} />)}
           </nav>
 
           <div className={styles.sidebarFooter}>
-            <span className={styles.sprintBadge}>Sprint 2</span>
-            <span className={styles.testnetBadge}>PROTOTIPO</span>
+            {auth.member && (
+              <span className={styles.clinicFooterName}>{auth.member.clinicName}</span>
+            )}
           </div>
         </aside>
 
@@ -174,7 +135,7 @@ function AppShell() {
           <header className={styles.topBar}>
             <h1 className={styles.pageTitle}>{title}</h1>
             <div className={styles.topBarRight}>
-              <TopBarAuth />
+              <TopBarInfo />
             </div>
           </header>
           <main className={styles.main}>
@@ -186,20 +147,20 @@ function AppShell() {
   )
 }
 
-// ── Root ──────────────────────────────────────────────────────────────────────
+// ── Root ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<AppShell />}>
-          <Route path="/"              element={<Dashboard />} />
-          <Route path="/pacientes"     element={<Pacientes />} />
-          <Route path="/consultas"     element={<ConsultasStub />} />
-          <Route path="/expedientes"   element={<ExpedientesStub />} />
-          <Route path="/solicitudes"   element={<Solicitudes />} />
-          <Route path="/personal"      element={<PersonalStub />} />
-          <Route path="/configuracion" element={<ConfiguracionStub />} />
+          <Route path="/"                  element={<Dashboard />} />
+          <Route path="/agenda"            element={<Agenda />} />
+          <Route path="/pacientes"         element={<Pacientes />} />
+          <Route path="/pacientes/:id"     element={<PacienteDetalle />} />
+          <Route path="/solicitudes"       element={<Solicitudes />} />
+          <Route path="/personal"          element={<PersonalStub />} />
+          <Route path="/configuracion"     element={<ConfiguracionStub />} />
         </Route>
       </Routes>
     </BrowserRouter>

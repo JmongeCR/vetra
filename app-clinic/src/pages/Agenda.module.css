@@ -1,0 +1,329 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  height: calc(100vh - 56px - 4rem);
+  min-height: 500px;
+}
+
+/* ── Toolbar ── */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.toolbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.viewTabs {
+  display: flex;
+  border: 1px solid var(--color-border, #e8e4df);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.viewTab {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted, #a09990);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.viewTab + .viewTab {
+  border-left: 1px solid var(--color-border, #e8e4df);
+}
+
+.viewTabActive {
+  background: var(--color-accent, #8b5cf6);
+  color: #fff;
+}
+
+.periodNav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navBtn {
+  font-size: 1.1rem;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border, #e8e4df);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-muted, #a09990);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.navBtn:hover {
+  color: var(--color-text, #2c2724);
+  border-color: var(--color-accent, #8b5cf6);
+}
+
+.periodLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text, #2c2724);
+  white-space: nowrap;
+  min-width: 200px;
+  text-align: center;
+}
+
+.btnToday {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--color-border, #e8e4df);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted, #a09990);
+  cursor: pointer;
+}
+
+.btnToday:hover {
+  border-color: var(--color-accent, #8b5cf6);
+  color: var(--color-accent, #8b5cf6);
+}
+
+.btnPrimary {
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.45rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-accent, #8b5cf6);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ── Week / Day grids ── */
+
+.weekGrid,
+.dayView {
+  display: flex;
+  flex: 1;
+  border: 1px solid var(--color-border, #e8e4df);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-surface, #fff);
+}
+
+.dayView {
+  flex: unset;
+  max-height: 520px;
+}
+
+.timeCol {
+  width: 52px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border, #e8e4df);
+}
+
+.timeColHeader {
+  height: 48px;
+  border-bottom: 1px solid var(--color-border, #e8e4df);
+}
+
+.timeSlot {
+  height: 40px;
+  font-size: 0.68rem;
+  color: var(--color-text-muted, #a09990);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 2px 6px 0 0;
+  border-bottom: 1px solid var(--color-border, #e8e4df);
+}
+
+.dayCol {
+  flex: 1;
+  border-right: 1px solid var(--color-border, #e8e4df);
+  min-width: 0;
+}
+
+.dayCol:last-child {
+  border-right: none;
+}
+
+.dayColFull {
+  border-right: none;
+}
+
+.dayColToday {
+  background: rgba(139,92,246,0.03);
+}
+
+.dayHeader {
+  height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-bottom: 1px solid var(--color-border, #e8e4df);
+}
+
+.dayName {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted, #a09990);
+}
+
+.dayNum {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text, #2c2724);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.dayNumToday {
+  background: var(--color-accent, #8b5cf6);
+  color: #fff;
+}
+
+.hourCell {
+  height: 40px;
+  border-bottom: 1px solid var(--color-border, #e8e4df);
+  transition: background 0.1s;
+}
+
+.hourCell:hover {
+  background: rgba(139,92,246,0.04);
+  cursor: pointer;
+}
+
+/* ── Month grid ── */
+
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border: 1px solid var(--color-border, #e8e4df);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-surface, #fff);
+}
+
+.monthDayName {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted, #a09990);
+  text-align: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--color-border, #e8e4df);
+  border-right: 1px solid var(--color-border, #e8e4df);
+}
+
+.monthDayName:last-child {
+  border-right: none;
+}
+
+.monthCell {
+  min-height: 80px;
+  border-bottom: 1px solid var(--color-border, #e8e4df);
+  border-right: 1px solid var(--color-border, #e8e4df);
+  padding: 0.4rem;
+}
+
+.monthCell:nth-child(7n) {
+  border-right: none;
+}
+
+.monthCellActive {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.monthCellActive:hover {
+  background: rgba(139,92,246,0.04);
+}
+
+.monthCellToday .monthDate {
+  background: var(--color-accent, #8b5cf6);
+  color: #fff;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.monthDate {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text, #2c2724);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Empty notice ── */
+
+.emptyNotice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1.25rem;
+  border: 1px dashed var(--color-border, #e8e4df);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 1.5rem;
+}
+
+.emptyNotice p {
+  font-size: 0.82rem;
+  color: var(--color-text-muted, #a09990);
+  margin: 0;
+}
+
+.emptyTag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-accent, #8b5cf6);
+  background: rgba(139,92,246,0.08);
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+}
+
+@media (max-width: 768px) {
+  .periodLabel { min-width: 140px; font-size: 0.78rem; }
+  .weekGrid { overflow-x: auto; }
+  .dayCol { min-width: 80px; }
+}

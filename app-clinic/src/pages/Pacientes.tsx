@@ -1,78 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { Patient, PatientSpecies, PatientSex } from '../types/patient'
 import { SPECIES_LABELS, SEX_LABELS, SPECIES_EMOJI } from '../types/patient'
 import { searchPetByVetId, createAccessRequest, type PassportData } from '../services/clinicDb'
 import { useClinicAuthContext } from '../contexts/clinicAuthContext'
 import { clinicSupabaseConfigured } from '../lib/supabase'
 import styles from './Pacientes.module.css'
-
-// ── Demo data ───────────────────────────────────────────────────────────────
-// This is FICTIONAL prototype data. No real patient or owner information.
-// These records will be replaced by a real database in Sprint 3 (Vetra Core).
-
-const DEMO_PATIENTS: Patient[] = [
-  {
-    id: '1a2b3c4d-0001',
-    name: 'Max',
-    species: 'dog',
-    breed: 'Labrador Retriever',
-    sex: 'male',
-    birthDate: '2020-03-15',
-    birthDateEstimated: false,
-    ownerName: 'Andrés García',
-    ownerPhone: '+506 8800-0001',
-    registeredAt: '2024-01-10T08:00:00Z',
-    microchip: '941000020000001',
-  },
-  {
-    id: '1a2b3c4d-0002',
-    vetId: 'VET-000001',
-    name: 'Mia',
-    species: 'cat',
-    breed: 'Siamés',
-    sex: 'female',
-    birthDate: '2021-07-22',
-    birthDateEstimated: false,
-    ownerName: 'Lucía Mora',
-    ownerPhone: '+506 8800-0002',
-    registeredAt: '2024-02-14T09:30:00Z',
-  },
-  {
-    id: '1a2b3c4d-0003',
-    name: 'Rocky',
-    species: 'dog',
-    breed: 'Bulldog Francés',
-    sex: 'male',
-    birthDate: '2022-01-05',
-    birthDateEstimated: true,
-    ownerName: 'Carlos Vega',
-    ownerPhone: '+506 8800-0003',
-    registeredAt: '2024-03-20T11:00:00Z',
-  },
-  {
-    id: '1a2b3c4d-0004',
-    name: 'Luna',
-    species: 'rabbit',
-    breed: 'Holandés enano',
-    sex: 'female',
-    birthDate: '2023-05-10',
-    ownerName: 'Sofía Jiménez',
-    ownerPhone: '+506 8800-0004',
-    registeredAt: '2024-04-01T10:00:00Z',
-  },
-  {
-    id: '1a2b3c4d-0005',
-    vetId: 'VET-000002',
-    name: 'Pisco',
-    species: 'bird',
-    breed: 'Loro amazónico',
-    sex: 'unknown',
-    birthDate: '2019-11-30',
-    ownerName: 'Diego Rojas',
-    ownerPhone: '+506 8800-0005',
-    registeredAt: '2024-05-07T14:00:00Z',
-  },
-]
 
 // ── Vetra search panel ──────────────────────────────────────────────────────
 
@@ -135,7 +68,7 @@ function VetraSearchPanel() {
     return (
       <div className={styles.vetraSearchNotice}>
         <strong>Supabase no configurado</strong>
-        <p>Agregá PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY al archivo .env de app-clinic.</p>
+        <p>Agregá PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY en las variables de entorno.</p>
       </div>
     )
   }
@@ -156,10 +89,7 @@ function VetraSearchPanel() {
       </form>
 
       {searching && <p className={styles.vetraHint}>Consultando Vetra…</p>}
-
-      {notFound && (
-        <p className={styles.vetraHint}>No se encontró ninguna mascota con ese VET-ID.</p>
-      )}
+      {notFound && <p className={styles.vetraHint}>No se encontró ninguna mascota con ese VET-ID.</p>}
 
       {result && (
         <div className={styles.vetResultCard}>
@@ -176,9 +106,9 @@ function VetraSearchPanel() {
           </p>
 
           {requestStatus === 'sent' ? (
-            <p className={styles.vetraSuccess}>✓ Solicitud enviada al propietario. Estará visible en Solicitudes.</p>
+            <p className={styles.vetraSuccess}>✓ Solicitud enviada. Visible en Solicitudes una vez respondida por el propietario.</p>
           ) : !member ? (
-            <p className={styles.vetraHint}>Autenticáte como personal de clínica para solicitar acceso.</p>
+            <p className={styles.vetraHint}>Iniciá sesión como personal de clínica para solicitar acceso.</p>
           ) : (
             <div className={styles.scopeSelector}>
               <p className={styles.scopeSelectorLabel}>Tipos de acceso a solicitar:</p>
@@ -222,16 +152,9 @@ const SEX_OPTIONS: PatientSex[] = ['male', 'female', 'unknown']
 
 function RegistrationPanel({ onClose, onSave }: PanelProps) {
   const [form, setForm] = useState({
-    name: '',
-    species: 'dog' as PatientSpecies,
-    breed: '',
-    sex: 'unknown' as PatientSex,
-    birthDate: '',
-    birthDateEstimated: false,
-    microchip: '',
-    ownerName: '',
-    ownerPhone: '',
-    vetId: '',
+    name: '', species: 'dog' as PatientSpecies, breed: '',
+    sex: 'unknown' as PatientSex, birthDate: '', birthDateEstimated: false,
+    microchip: '', ownerName: '', ownerPhone: '', vetId: '',
   })
   const [error, setError] = useState('')
 
@@ -241,9 +164,9 @@ function RegistrationPanel({ onClose, onSave }: PanelProps) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name.trim()) { setError('El nombre es obligatorio.'); return }
+    if (!form.name.trim())      { setError('El nombre es obligatorio.'); return }
     if (!form.ownerName.trim()) { setError('El responsable es obligatorio.'); return }
-    const patient: Patient = {
+    onSave({
       id: crypto.randomUUID(),
       name: form.name.trim(),
       species: form.species,
@@ -256,8 +179,7 @@ function RegistrationPanel({ onClose, onSave }: PanelProps) {
       ownerPhone: form.ownerPhone.trim(),
       vetId: form.vetId.trim() || undefined,
       registeredAt: new Date().toISOString(),
-    }
-    onSave(patient)
+    })
     onClose()
   }
 
@@ -267,11 +189,6 @@ function RegistrationPanel({ onClose, onSave }: PanelProps) {
         <div className={styles.panelHeader}>
           <h2 className={styles.panelTitle}>Registrar paciente</h2>
           <button className={styles.panelClose} onClick={onClose} aria-label="Cerrar">✕</button>
-        </div>
-        <div className={styles.panelNotice}>
-          <strong>⚠️ Prototipo</strong>
-          <p>Los datos ingresados son ficticios y solo se guardan en memoria para esta sesión.
-          En Sprint 3 se conectará a la base de datos de la clínica.</p>
         </div>
         <form onSubmit={handleSubmit} className={styles.panelForm} noValidate>
           <div className={styles.panelSection}>
@@ -330,7 +247,6 @@ function RegistrationPanel({ onClose, onSave }: PanelProps) {
             </div>
             <p className={styles.panelHint}>
               Si el propietario ya tiene un registro en Vetra, ingresá el ID para vincularlo.
-              La verificación automática estará disponible en Sprint 3.
             </p>
           </div>
 
@@ -351,7 +267,8 @@ function RegistrationPanel({ onClose, onSave }: PanelProps) {
 type SearchMode = 'mine' | 'vetra'
 
 export default function Pacientes() {
-  const [patients, setPatients] = useState<Patient[]>(DEMO_PATIENTS)
+  const navigate = useNavigate()
+  const [patients, setPatients] = useState<Patient[]>([])
   const [query, setQuery] = useState('')
   const [speciesFilter, setSpeciesFilter] = useState<PatientSpecies | ''>('')
   const [searchMode, setSearchMode] = useState<SearchMode>('mine')
@@ -383,10 +300,7 @@ export default function Pacientes() {
 
       {/* ── Toolbar ── */}
       <div className={styles.toolbar}>
-        <div className={styles.toolbarLeft}>
-          <h1 className={styles.title}>Pacientes</h1>
-          <span className={styles.prototypeBadge}>Prototipo · Datos ficticios</span>
-        </div>
+        <h1 className={styles.title}>Pacientes</h1>
         <button className={styles.btnPrimary} onClick={() => setShowPanel(true)}>
           + Registrar paciente
         </button>
@@ -445,7 +359,7 @@ export default function Pacientes() {
                 </>
               ) : (
                 <>
-                  <p>No hay pacientes registrados todavía.</p>
+                  <p>No hay pacientes registrados en esta clínica.</p>
                   <button className={styles.btnPrimary} onClick={() => setShowPanel(true)}>
                     Registrar primer paciente
                   </button>
@@ -461,13 +375,18 @@ export default function Pacientes() {
                     <th>Especie / Raza</th>
                     <th>Responsable</th>
                     <th>Microchip</th>
-                    <th>ID Vetra</th>
+                    <th>VET-ID</th>
                     <th>Ingreso</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((p) => (
-                    <tr key={p.id} className={styles.row}>
+                    <tr
+                      key={p.id}
+                      className={styles.row}
+                      onClick={() => navigate(`/pacientes/${p.id}`, { state: { patient: p } })}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <td>
                         <div className={styles.patientCell}>
                           <span className={styles.speciesEmoji}>{SPECIES_EMOJI[p.species]}</span>
@@ -507,9 +426,11 @@ export default function Pacientes() {
             </div>
           )}
 
-          <p className={styles.count}>
-            {filtered.length} paciente{filtered.length !== 1 ? 's' : ''} · datos ficticios
-          </p>
+          {patients.length > 0 && (
+            <p className={styles.count}>
+              {filtered.length} paciente{filtered.length !== 1 ? 's' : ''}
+            </p>
+          )}
         </>
       )}
     </div>

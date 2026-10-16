@@ -1,0 +1,185 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg, #faf8f5);
+  padding: 2rem 1rem;
+}
+
+.card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e8e4df);
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.brandMark {
+  font-size: 1.6rem;
+  color: var(--color-accent, #8b5cf6);
+}
+
+.brandName {
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--color-accent, #8b5cf6);
+}
+
+.brandBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #a09990);
+  margin-left: 0.2rem;
+}
+
+.title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-text, #2c2724);
+  margin: 0 0 0.4rem;
+}
+
+.subtitle {
+  font-size: 0.82rem;
+  color: var(--color-text-muted, #a09990);
+  margin: 0 0 1.75rem;
+  line-height: 1.5;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text, #2c2724);
+}
+
+.input {
+  font-size: 0.88rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--color-border, #e8e4df);
+  border-radius: 8px;
+  background: var(--color-bg, #faf8f5);
+  color: var(--color-text, #2c2724);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: var(--color-accent, #8b5cf6);
+}
+
+.error {
+  font-size: 0.78rem;
+  color: #b91c1c;
+  background: rgba(185,28,28,0.06);
+  border: 1px solid rgba(185,28,28,0.18);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+}
+
+.btnPrimary {
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-accent, #8b5cf6);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.btnSecondary {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border, #e8e4df);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted, #a09990);
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.successIcon {
+  font-size: 2.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.successTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text, #2c2724);
+  margin: 0;
+}
+
+.successDesc {
+  font-size: 0.82rem;
+  color: var(--color-text-muted, #a09990);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.notice {
+  background: rgba(139,92,246,0.06);
+  border: 1px solid rgba(139,92,246,0.2);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  font-size: 0.82rem;
+}
+
+.notice strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: var(--color-text, #2c2724);
+}
+
+.notice p {
+  margin: 0;
+  color: var(--color-text-muted, #a09990);
+  line-height: 1.5;
+}
+
+.notice code {
+  font-size: 0.78rem;
+  background: rgba(139,92,246,0.1);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}

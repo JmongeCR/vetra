@@ -96,6 +96,18 @@
 	flex: 1;
 }
 
+/* ── Nav section label ────────────────────────────────────────────────────── */
+
+.navSection {
+	font-size: 0.62rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--color-text-muted, #a09990);
+	padding: 0.85rem 0.75rem 0.3rem;
+	opacity: 0.7;
+}
+
 /* ── Sidebar footer ───────────────────────────────────────────────────────── */
 
 .sidebarFooter {
@@ -106,27 +118,34 @@
 	align-items: center;
 }
 
-.sprintBadge {
-	font-size: 0.65rem;
-	font-weight: 700;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
+.clinicFooterName {
+	font-size: 0.7rem;
+	font-weight: 600;
 	color: var(--color-text-muted, #a09990);
-	background: var(--color-bg, #faf8f5);
-	border: 1px solid var(--color-border, #e8e4df);
-	padding: 0.2rem 0.5rem;
-	border-radius: 4px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
-.testnetBadge {
-	font-size: 0.65rem;
-	font-weight: 700;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--color-accent-light, #c4b5fd);
-	background: rgba(139, 92, 246, 0.1);
-	padding: 0.2rem 0.5rem;
-	border-radius: 4px;
+/* ── Loading screen ───────────────────────────────────────────────────────── */
+
+.loadingScreen {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--color-bg, #faf8f5);
+}
+
+.loadingMark {
+	font-size: 2.5rem;
+	color: var(--color-accent, #8b5cf6);
+	animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+	0%, 100% { opacity: 1; }
+	50%       { opacity: 0.35; }
 }
 
 /* ── Top bar ──────────────────────────────────────────────────────────────── */
