@@ -198,3 +198,84 @@ CREATE POLICY "access_audit: nobody writes directly"
 CREATE POLICY "access_audit: owner reads their pet's audit"
     ON access_audit FOR SELECT
     USING (is_guardian_of(pet_id));
+
+-- access_requests: clinic staff can also read requests they submitted
+CREATE POLICY "access_requests: clinic staff read"
+    ON access_requests FOR SELECT
+    USING (is_clinic_member(clinic_id));
+
+-- consents: clinic staff INSERT is handled exclusively via approve_access_request()
+-- (no direct INSERT policy; SECURITY DEFINER function bypasses RLS)
+
+-- ── SECURITY DEFINER functions for atomic approve / reject ────────────────────
+-- These run as the DB owner and bypass RLS, so they can atomically:
+--   approve: update request status + create consent row
+--   reject:  update request status only
+-- Both verify is_guardian_of() before acting.
+
+CREATE OR REPLACE FUNCTION approve_access_request(p_request_id UUID)
+RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_req     access_requests%ROWTYPE;
+    v_prof_id UUID;
+    v_cid     UUID;
+BEGIN
+    SELECT * INTO v_req FROM access_requests WHERE id = p_request_id FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'request_not_found'; END IF;
+    IF v_req.status <> 'pending' THEN RAISE EXCEPTION 'request_not_pending'; END IF;
+    IF NOT is_guardian_of(v_req.pet_id) THEN RAISE EXCEPTION 'not_authorized'; END IF;
+
+    SELECT id INTO v_prof_id FROM profiles WHERE auth_user_id = auth.uid();
+    IF NOT FOUND THEN RAISE EXCEPTION 'profile_not_found'; END IF;
+
+    UPDATE access_requests SET status = 'approved' WHERE id = p_request_id;
+
+    INSERT INTO consents (
+        access_request_id, clinic_id, pet_id, owner_profile_id, scopes, expires_at
+    ) VALUES (
+        p_request_id, v_req.clinic_id, v_req.pet_id, v_prof_id, v_req.scopes, v_req.expires_at
+    )
+    RETURNING id INTO v_cid;
+
+    RETURN v_cid;
+END;
+$$;
+REVOKE EXECUTE ON FUNCTION approve_access_request(UUID) FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION approve_access_request(UUID) TO authenticated;
+
+CREATE OR REPLACE FUNCTION reject_access_request(p_request_id UUID)
+RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_req access_requests%ROWTYPE;
+BEGIN
+    SELECT * INTO v_req FROM access_requests WHERE id = p_request_id FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'request_not_found'; END IF;
+    IF v_req.status <> 'pending' THEN RAISE EXCEPTION 'request_not_pending'; END IF;
+    IF NOT is_guardian_of(v_req.pet_id) THEN RAISE EXCEPTION 'not_authorized'; END IF;
+
+    UPDATE access_requests SET status = 'rejected' WHERE id = p_request_id;
+END;
+$$;
+REVOKE EXECUTE ON FUNCTION reject_access_request(UUID) FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION reject_access_request(UUID) TO authenticated;
+
+-- Clinic staff helper: check if an active consent exists for a given pet
+CREATE OR REPLACE FUNCTION has_active_consent_for_pet(p_pet_id UUID)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public, pg_temp AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM consents c
+        JOIN clinic_users cu ON cu.clinic_id = c.clinic_id
+        WHERE c.pet_id       = p_pet_id
+          AND c.status       = 'active'
+          AND cu.auth_user_id = auth.uid()
+          AND cu.is_active
+          AND (c.expires_at IS NULL OR c.expires_at > now())
+    );
+$$;
+REVOKE EXECUTE ON FUNCTION has_active_consent_for_pet(UUID) FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION has_active_consent_for_pet(UUID) TO authenticated;

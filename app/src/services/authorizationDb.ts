@@ -72,10 +72,9 @@ export async function updateAccessRequestStatus(
 ): Promise<{ ok: boolean; error?: string }> {
 	if (!supabaseConfigured || !isSupabaseTokenValid())
 		return { ok: false, error: "No autenticado" }
-	const { error } = await supabase
-		.from("access_requests")
-		.update({ status })
-		.eq("id", id)
+
+	const fn = status === "approved" ? "approve_access_request" : "reject_access_request"
+	const { error } = await supabase.rpc(fn, { p_request_id: id })
 	if (error) return { ok: false, error: error.message }
 	return { ok: true }
 }

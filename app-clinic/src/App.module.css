@@ -169,6 +169,66 @@
 	color: var(--color-text-muted, #a09990);
 }
 
+.authBar {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.authError {
+	font-size: 0.72rem;
+	color: #c0392b;
+	max-width: 220px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.loginForm {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.loginInput {
+	font-size: 0.78rem;
+	padding: 0.3rem 0.65rem;
+	border: 1px solid var(--color-border, #e8e4df);
+	border-radius: 6px;
+	background: var(--color-bg, #faf8f5);
+	color: var(--color-text, #2c2724);
+	width: 200px;
+	outline: none;
+}
+.loginInput:focus {
+	border-color: var(--color-accent, #8b5cf6);
+}
+
+.btnSignIn {
+	font-size: 0.78rem;
+	font-weight: 600;
+	padding: 0.3rem 0.75rem;
+	border: none;
+	border-radius: 6px;
+	background: var(--color-accent, #8b5cf6);
+	color: #fff;
+	cursor: pointer;
+	white-space: nowrap;
+}
+.btnSignIn:disabled { opacity: 0.5; cursor: default; }
+
+.btnSignOut {
+	font-size: 0.72rem;
+	font-weight: 600;
+	padding: 0.25rem 0.6rem;
+	border: 1px solid var(--color-border, #e8e4df);
+	border-radius: 6px;
+	background: transparent;
+	color: var(--color-text-muted, #a09990);
+	cursor: pointer;
+}
+.btnSignOut:hover { border-color: #c0392b; color: #c0392b; }
+
 /* ── Main ─────────────────────────────────────────────────────────────────── */
 
 .main {

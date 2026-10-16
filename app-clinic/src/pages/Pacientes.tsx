@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import type { Patient, PatientSpecies, PatientSex } from '../types/patient'
 import { SPECIES_LABELS, SEX_LABELS, SPECIES_EMOJI } from '../types/patient'
+import { searchPetByVetId, createAccessRequest, type PassportData } from '../services/clinicDb'
+import { useClinicAuthContext } from '../contexts/clinicAuthContext'
+import { clinicSupabaseConfigured } from '../lib/supabase'
 import styles from './Pacientes.module.css'
 
 // ── Demo data ───────────────────────────────────────────────────────────────
@@ -70,6 +73,142 @@ const DEMO_PATIENTS: Patient[] = [
     registeredAt: '2024-05-07T14:00:00Z',
   },
 ]
+
+// ── Vetra search panel ──────────────────────────────────────────────────────
+
+const SCOPE_OPTIONS = [
+  { id: 'basic_data',           label: 'Datos básicos' },
+  { id: 'vaccines',             label: 'Vacunas' },
+  { id: 'medical_history',      label: 'Historial médico' },
+  { id: 'shared_consultations', label: 'Consultas propias' },
+  { id: 'authorized_documents', label: 'Documentos' },
+]
+
+function VetraSearchPanel() {
+  const { member } = useClinicAuthContext()
+  const [vetId, setVetId] = useState('')
+  const [searching, setSearching] = useState(false)
+  const [result, setResult] = useState<PassportData | null>(null)
+  const [notFound, setNotFound] = useState(false)
+  const [selectedScopes, setSelectedScopes] = useState<string[]>(['basic_data'])
+  const [requesting, setRequesting] = useState(false)
+  const [requestStatus, setRequestStatus] = useState<'idle' | 'sent' | 'error'>('idle')
+  const [requestError, setRequestError] = useState('')
+
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    const q = vetId.trim().toUpperCase()
+    if (!q) return
+    setSearching(true)
+    setResult(null)
+    setNotFound(false)
+    setRequestStatus('idle')
+    const data = await searchPetByVetId(q)
+    setSearching(false)
+    if (data) setResult(data)
+    else setNotFound(true)
+  }
+
+  function toggleScope(id: string) {
+    setSelectedScopes((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    )
+  }
+
+  async function handleRequestAccess() {
+    if (!result || !member) return
+    if (selectedScopes.length === 0) { setRequestError('Seleccioná al menos un tipo de acceso.'); return }
+    setRequesting(true)
+    setRequestError('')
+    const res = await createAccessRequest({
+      petId: result.id,
+      clinicId: member.clinicId,
+      scopes: selectedScopes,
+      message: `Solicitud desde ${member.clinicName}`,
+    })
+    setRequesting(false)
+    if (res.ok) setRequestStatus('sent')
+    else { setRequestStatus('error'); setRequestError(res.error ?? 'Error al enviar') }
+  }
+
+  if (!clinicSupabaseConfigured) {
+    return (
+      <div className={styles.vetraSearchNotice}>
+        <strong>Supabase no configurado</strong>
+        <p>Agregá PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY al archivo .env de app-clinic.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.vetraSearchPanel}>
+      <form onSubmit={(e) => void handleSearch(e)} className={styles.vetSearchForm}>
+        <input
+          className={styles.vetSearchInput}
+          value={vetId}
+          onChange={(e) => setVetId(e.target.value.toUpperCase())}
+          placeholder="VET-XXXXXXXX"
+          maxLength={20}
+        />
+        <button className={styles.btnPrimary} type="submit" disabled={searching}>
+          {searching ? 'Buscando…' : 'Buscar'}
+        </button>
+      </form>
+
+      {searching && <p className={styles.vetraHint}>Consultando Vetra…</p>}
+
+      {notFound && (
+        <p className={styles.vetraHint}>No se encontró ninguna mascota con ese VET-ID.</p>
+      )}
+
+      {result && (
+        <div className={styles.vetResultCard}>
+          <div className={styles.vetResultHeader}>
+            <span className={styles.vetResultName}>{result.name}</span>
+            <code className={styles.vetIdBadge}>{result.vet_id}</code>
+          </div>
+          <p className={styles.vetResultMeta}>
+            {result.species}{result.breed ? ` · ${result.breed}` : ''} · {result.sex}
+            {result.birth_date ? ` · Nac. ${result.birth_date}` : ''}
+          </p>
+          <p className={styles.vetResultMeta}>
+            Stellar: <strong>{result.stellar_status}</strong>
+          </p>
+
+          {requestStatus === 'sent' ? (
+            <p className={styles.vetraSuccess}>✓ Solicitud enviada al propietario. Estará visible en Solicitudes.</p>
+          ) : !member ? (
+            <p className={styles.vetraHint}>Autenticáte como personal de clínica para solicitar acceso.</p>
+          ) : (
+            <div className={styles.scopeSelector}>
+              <p className={styles.scopeSelectorLabel}>Tipos de acceso a solicitar:</p>
+              <div className={styles.scopeOptions}>
+                {SCOPE_OPTIONS.map((s) => (
+                  <label key={s.id} className={styles.scopeOption}>
+                    <input
+                      type="checkbox"
+                      checked={selectedScopes.includes(s.id)}
+                      onChange={() => toggleScope(s.id)}
+                    />
+                    {s.label}
+                  </label>
+                ))}
+              </div>
+              {requestError && <p className={styles.panelError}>{requestError}</p>}
+              <button
+                className={styles.btnPrimary}
+                onClick={() => void handleRequestAccess()}
+                disabled={requesting || selectedScopes.length === 0}
+              >
+                {requesting ? 'Enviando…' : 'Solicitar acceso al propietario'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ── Registration panel ──────────────────────────────────────────────────────
 
@@ -290,16 +429,7 @@ export default function Pacientes() {
         </button>
       </div>
 
-      {searchMode === 'vetra' && (
-        <div className={styles.vetraSearchNotice}>
-          <strong>Búsqueda en Vetra</strong>
-          <p>
-            Esta función permitirá consultar identidades universales VET-XXXXXX registradas
-            en Vetra Core, sin acceso automático a expedientes de otras clínicas.
-            Disponible en Sprint 3 una vez que Vetra Core API esté implementado.
-          </p>
-        </div>
-      )}
+      {searchMode === 'vetra' && <VetraSearchPanel />}
 
       {searchMode === 'mine' && (
         <>
