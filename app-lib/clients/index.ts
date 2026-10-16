@@ -3,8 +3,8 @@
 // To customize a client, import it into your own code under app/ instead.
 
 import { network } from "@stellar-scaffold/app-lib"
-import { Client as Reputation } from "reputation"
-import { Client as PetIdentity } from "pet_identity"
+import { Client as Reputation } from "./reputation/dist/index.js"
+import { Client as PetIdentity } from "./pet_identity/dist/index.js"
 
 const { passphrase: networkPassphrase, rpcUrl, id } = network
 
