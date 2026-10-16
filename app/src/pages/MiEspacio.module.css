@@ -1,0 +1,219 @@
+.page {
+	max-width: 900px;
+}
+
+/* ── Greeting ─────────────────────────────────────────────────────────────── */
+
+.greeting {
+	margin-bottom: 2rem;
+}
+
+.greetingTitle {
+	font-size: 1.75rem;
+	font-weight: 800;
+	color: var(--color-text);
+	margin: 0 0 0.25rem;
+	letter-spacing: -0.02em;
+}
+
+.greetingSubtitle {
+	color: var(--color-text-muted);
+	font-size: 0.9rem;
+	margin: 0;
+}
+
+/* ── Stats ────────────────────────────────────────────────────────────────── */
+
+.stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+	gap: 1rem;
+	margin-bottom: 2rem;
+}
+
+.statCard {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	padding: 1.25rem 1.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.statNum {
+	font-size: 2rem;
+	font-weight: 800;
+	color: var(--color-accent);
+	line-height: 1;
+}
+
+.statLabel {
+	font-size: 0.78rem;
+	color: var(--color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────────── */
+
+.section {
+	margin-bottom: 2rem;
+}
+
+.sectionHeader {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	margin-bottom: 1rem;
+}
+
+.sectionTitle {
+	font-size: 0.875rem;
+	font-weight: 700;
+	color: var(--color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	margin: 0 0 1rem;
+}
+
+.seeAll {
+	font-size: 0.8rem;
+	color: var(--color-accent);
+	text-decoration: none;
+}
+.seeAll:hover { text-decoration: underline; }
+
+/* ── Quick actions ────────────────────────────────────────────────────────── */
+
+.actions {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 0.75rem;
+}
+
+.actionBtn {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+	padding: 1rem 1rem;
+	text-decoration: none;
+	color: var(--color-text);
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.5rem;
+	transition: border-color 0.1s, background 0.1s;
+}
+
+.actionBtn:hover {
+	border-color: var(--color-accent);
+	background: var(--color-accent-dim);
+}
+
+.actionIcon {
+	font-size: 1.25rem;
+}
+
+.actionLabel {
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+/* ── Pet grid ─────────────────────────────────────────────────────────────── */
+
+.petGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 0.75rem;
+}
+
+.petCard {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+	padding: 1rem;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	text-decoration: none;
+	color: var(--color-text);
+	transition: border-color 0.1s, background 0.1s;
+}
+
+.petCard:hover {
+	border-color: var(--color-accent);
+	background: var(--color-accent-dim);
+}
+
+.petEmoji {
+	font-size: 1.5rem;
+	flex-shrink: 0;
+}
+
+.petInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	overflow: hidden;
+}
+
+.petName {
+	font-size: 0.9rem;
+	font-weight: 700;
+	color: var(--color-text);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.petSpecies {
+	font-size: 0.75rem;
+	color: var(--color-text-muted);
+}
+
+.petVetId {
+	font-size: 0.7rem;
+	color: var(--color-accent-light);
+	font-family: "Inconsolata", monospace;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+
+.empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 2.5rem;
+	text-align: center;
+	color: var(--color-text-muted);
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+}
+
+.emptyIcon { font-size: 2rem; }
+
+.btnPrimary {
+	display: inline-block;
+	background: var(--color-accent);
+	color: #fff;
+	text-decoration: none;
+	border: none;
+	border-radius: var(--radius-full);
+	padding: 0.55rem 1.25rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.1s;
+}
+.btnPrimary:hover { opacity: 0.88; }
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+	.greetingTitle { font-size: 1.4rem; }
+	.stats { grid-template-columns: 1fr 1fr; }
+	.actions { grid-template-columns: repeat(3, 1fr); }
+}

@@ -1,0 +1,150 @@
+.page {
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+	max-width: 900px;
+}
+
+/* ── Auth notice ──────────────────────────────────────────────────────────── */
+
+.authNotice {
+	display: flex;
+	gap: 1rem;
+	background: rgba(139, 92, 246, 0.06);
+	border: 1px solid rgba(139, 92, 246, 0.25);
+	border-radius: 12px;
+	padding: 1.1rem 1.25rem;
+}
+
+.authIcon { font-size: 1.25rem; flex-shrink: 0; margin-top: 0.1rem; }
+
+.authNotice strong {
+	display: block;
+	font-size: 0.875rem;
+	color: var(--color-text, #2c2724);
+	margin-bottom: 0.25rem;
+}
+
+.authNotice p {
+	font-size: 0.8rem;
+	color: var(--color-text-muted, #a09990);
+	margin: 0;
+	line-height: 1.5;
+}
+
+/* ── Section ──────────────────────────────────────────────────────────────── */
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.sectionLabel {
+	font-size: 0.75rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: var(--color-text-muted, #a09990);
+	margin: 0;
+}
+
+/* ── Quick access ─────────────────────────────────────────────────────────── */
+
+.quickGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 0.75rem;
+}
+
+.quickCard {
+	background: var(--color-surface, #fff);
+	border: 1px solid var(--color-border, #e8e4df);
+	border-radius: 10px;
+	padding: 1rem;
+	text-decoration: none;
+	color: var(--color-text, #2c2724);
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.5rem;
+	transition: border-color 0.1s, background 0.1s;
+}
+
+.quickCard:hover {
+	border-color: var(--color-accent, #8b5cf6);
+	background: var(--color-accent-dim, rgba(139,92,246,0.06));
+}
+
+.quickIcon { font-size: 1.25rem; }
+.quickLabel { font-size: 0.8rem; font-weight: 600; }
+
+/* ── Module grid ──────────────────────────────────────────────────────────── */
+
+.moduleGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 0.75rem;
+}
+
+.moduleCard {
+	background: var(--color-surface, #fff);
+	border: 1px solid var(--color-border, #e8e4df);
+	border-radius: 10px;
+	padding: 1rem 1.25rem;
+	text-decoration: none;
+	color: var(--color-text, #2c2724);
+	display: flex;
+	align-items: flex-start;
+	gap: 0.9rem;
+	transition: border-color 0.1s, background 0.1s;
+}
+
+.moduleCard:hover {
+	border-color: var(--color-accent, #8b5cf6);
+	background: var(--color-accent-dim, rgba(139,92,246,0.06));
+}
+
+.moduleIcon { font-size: 1.5rem; flex-shrink: 0; }
+
+.moduleTitle {
+	display: block;
+	font-size: 0.875rem;
+	font-weight: 700;
+	color: var(--color-text, #2c2724);
+	margin-bottom: 0.25rem;
+}
+
+.moduleDesc {
+	font-size: 0.78rem;
+	color: var(--color-text-muted, #a09990);
+	margin: 0;
+	line-height: 1.5;
+}
+
+/* ── Vetra note ───────────────────────────────────────────────────────────── */
+
+.vetraNote {
+	display: flex;
+	gap: 1rem;
+	background: var(--color-surface, #fff);
+	border: 1px solid var(--color-border, #e8e4df);
+	border-radius: 12px;
+	padding: 1rem 1.25rem;
+}
+
+.vetraIcon { font-size: 1.25rem; flex-shrink: 0; margin-top: 0.05rem; }
+
+.vetraNote strong {
+	display: block;
+	font-size: 0.875rem;
+	color: var(--color-text, #2c2724);
+	margin-bottom: 0.25rem;
+}
+
+.vetraNote p {
+	font-size: 0.8rem;
+	color: var(--color-text-muted, #a09990);
+	margin: 0;
+	line-height: 1.5;
+}

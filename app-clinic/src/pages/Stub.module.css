@@ -1,0 +1,68 @@
+.page {
+	max-width: 560px;
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.card {
+	background: var(--color-surface, #fff);
+	border: 1px solid var(--color-border, #e8e4df);
+	border-radius: 14px;
+	padding: 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.icon {
+	font-size: 2rem;
+	display: block;
+}
+
+.title {
+	font-size: 1.2rem;
+	font-weight: 800;
+	color: var(--color-text, #2c2724);
+	margin: 0;
+	letter-spacing: -0.01em;
+}
+
+.desc {
+	font-size: 0.875rem;
+	color: var(--color-text-muted, #a09990);
+	margin: 0;
+	line-height: 1.65;
+}
+
+.badge {
+	align-self: flex-start;
+	background: var(--color-bg, #faf8f5);
+	border: 1px solid var(--color-border, #e8e4df);
+	border-radius: 4px;
+	padding: 0.2rem 0.6rem;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--color-text-muted, #a09990);
+}
+
+.features {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.feature {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	font-size: 0.85rem;
+	color: var(--color-text-muted, #a09990);
+}
+
+.check {
+	font-size: 0.75rem;
+	color: var(--color-border, #e8e4df);
+}

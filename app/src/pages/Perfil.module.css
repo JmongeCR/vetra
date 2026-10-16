@@ -1,0 +1,222 @@
+.page {
+	max-width: 640px;
+}
+
+.pageHeader {
+	margin-bottom: 1.75rem;
+}
+
+.pageTitle {
+	font-size: 1.5rem;
+	font-weight: 800;
+	color: var(--color-text);
+	margin: 0 0 0.25rem;
+	letter-spacing: -0.02em;
+}
+
+.pageSubtitle {
+	color: var(--color-text-muted);
+	font-size: 0.875rem;
+	margin: 0;
+}
+
+/* ── Identity card ────────────────────────────────────────────────────────── */
+
+.identityCard {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 14px;
+	padding: 1.5rem;
+	display: flex;
+	align-items: center;
+	gap: 1.25rem;
+	margin-bottom: 1.25rem;
+}
+
+.avatarPlaceholder {
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: var(--color-accent-dim);
+	border: 2px solid var(--color-accent);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: var(--color-accent);
+	flex-shrink: 0;
+}
+
+.identityInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	min-width: 0;
+}
+
+.identityName {
+	font-size: 1.1rem;
+	font-weight: 700;
+	color: var(--color-text);
+}
+
+.muted { color: var(--color-text-muted); }
+
+.stellarAddress {
+	font-size: 0.75rem;
+	font-family: "Inconsolata", monospace;
+	color: var(--color-accent-light);
+}
+
+.metaRow {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.metaBadge {
+	background: var(--color-accent-dim);
+	color: var(--color-accent);
+	font-size: 0.65rem;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	padding: 0.2rem 0.55rem;
+	border-radius: var(--radius-full);
+}
+
+.metaSince {
+	font-size: 0.75rem;
+	color: var(--color-text-muted);
+}
+
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+
+.card {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	padding: 1.25rem 1.5rem;
+	margin-bottom: 1rem;
+}
+
+.dangerCard {
+	border-color: rgba(239, 68, 68, 0.25);
+}
+
+.cardTitle {
+	font-size: 0.9rem;
+	font-weight: 700;
+	color: var(--color-text);
+	margin: 0 0 0.35rem;
+}
+
+.cardDesc {
+	font-size: 0.8rem;
+	color: var(--color-text-muted);
+	margin: 0 0 1rem;
+}
+
+/* ── Form ─────────────────────────────────────────────────────────────────── */
+
+.form {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.input {
+	background: var(--color-bg);
+	border: 1px solid var(--color-border);
+	border-radius: 8px;
+	padding: 0.55rem 0.9rem;
+	font-size: 0.9rem;
+	color: var(--color-text);
+	width: 100%;
+	box-sizing: border-box;
+	font-family: inherit;
+	transition: border-color 0.1s;
+}
+
+.input:focus {
+	outline: none;
+	border-color: var(--color-accent);
+}
+
+.notice {
+	font-size: 0.8rem;
+	color: var(--color-text-muted);
+	font-style: italic;
+}
+
+.msgOk { font-size: 0.8rem; color: #22c55e; margin: 0; }
+.msgError { font-size: 0.8rem; color: #ef4444; margin: 0; }
+
+/* ── Address ──────────────────────────────────────────────────────────────── */
+
+.addressRow {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	background: var(--color-bg);
+	border: 1px solid var(--color-border);
+	border-radius: 8px;
+	padding: 0.55rem 0.9rem;
+}
+
+.addressFull {
+	font-size: 0.72rem;
+	font-family: "Inconsolata", monospace;
+	color: var(--color-accent-light);
+	word-break: break-all;
+	flex: 1;
+}
+
+.btnCopy {
+	background: none;
+	border: 1px solid var(--color-border);
+	border-radius: 6px;
+	padding: 0.25rem 0.65rem;
+	font-size: 0.75rem;
+	color: var(--color-text-muted);
+	cursor: pointer;
+	flex-shrink: 0;
+	transition: border-color 0.1s, color 0.1s;
+}
+.btnCopy:hover { border-color: var(--color-accent); color: var(--color-accent); }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+
+.btnPrimary {
+	align-self: flex-start;
+	background: var(--color-accent);
+	color: #fff;
+	border: none;
+	border-radius: var(--radius-full);
+	padding: 0.5rem 1.25rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.1s;
+}
+.btnPrimary:hover:not(:disabled) { opacity: 0.88; }
+.btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btnDanger {
+	background: none;
+	border: 1px solid rgba(239, 68, 68, 0.5);
+	color: #ef4444;
+	border-radius: var(--radius-full);
+	padding: 0.5rem 1.25rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.1s;
+}
+.btnDanger:hover { background: rgba(239, 68, 68, 0.08); }
+
+@media (max-width: 600px) {
+	.identityCard { flex-direction: column; align-items: flex-start; }
+}

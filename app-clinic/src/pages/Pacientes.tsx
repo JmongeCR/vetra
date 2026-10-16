@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { Patient, PatientSpecies, PatientSex } from '../types/patient'
 import { SPECIES_LABELS, SEX_LABELS, SPECIES_EMOJI } from '../types/patient'
 import styles from './Pacientes.module.css'

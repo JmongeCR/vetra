@@ -1,0 +1,143 @@
+.page {
+	max-width: 680px;
+}
+
+.pageHeader {
+	margin-bottom: 1.75rem;
+}
+
+.pageTitle {
+	font-size: 1.5rem;
+	font-weight: 800;
+	color: var(--color-text);
+	margin: 0 0 0.25rem;
+	letter-spacing: -0.02em;
+}
+
+.pageSubtitle {
+	font-size: 0.875rem;
+	color: var(--color-text-muted);
+	margin: 0;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+
+.empty {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 14px;
+	padding: 2.5rem 2rem;
+	text-align: center;
+	margin-bottom: 2rem;
+}
+
+.emptyIcon {
+	font-size: 2.5rem;
+	display: block;
+	margin-bottom: 0.75rem;
+}
+
+.emptyTitle {
+	font-size: 1.1rem;
+	font-weight: 700;
+	color: var(--color-text);
+	margin: 0 0 0.5rem;
+}
+
+.emptyDesc {
+	font-size: 0.875rem;
+	color: var(--color-text-muted);
+	margin: 0;
+	max-width: 420px;
+	margin-inline: auto;
+	line-height: 1.6;
+}
+
+/* ── How it works ─────────────────────────────────────────────────────────── */
+
+.howSection {
+	margin-bottom: 2rem;
+}
+
+.howTitle {
+	font-size: 0.875rem;
+	font-weight: 700;
+	color: var(--color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	margin: 0 0 1rem;
+}
+
+.howSteps {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.step {
+	display: flex;
+	align-items: flex-start;
+	gap: 1rem;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+	padding: 1rem 1.25rem;
+}
+
+.stepIcon {
+	font-size: 1.5rem;
+	flex-shrink: 0;
+}
+
+.stepTitle {
+	display: block;
+	font-size: 0.875rem;
+	font-weight: 700;
+	color: var(--color-text);
+	margin-bottom: 0.25rem;
+}
+
+.stepDesc {
+	font-size: 0.8rem;
+	color: var(--color-text-muted);
+	margin: 0;
+	line-height: 1.5;
+}
+
+/* ── CTA ──────────────────────────────────────────────────────────────────── */
+
+.cta {
+	display: flex;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.btnPrimary {
+	display: inline-block;
+	background: var(--color-accent);
+	color: #fff;
+	text-decoration: none;
+	border-radius: var(--radius-full);
+	padding: 0.5rem 1.25rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	transition: opacity 0.1s;
+}
+.btnPrimary:hover { opacity: 0.88; }
+
+.btnOutline {
+	display: inline-block;
+	background: none;
+	color: var(--color-text-muted);
+	text-decoration: none;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-full);
+	padding: 0.5rem 1.25rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	transition: border-color 0.1s, color 0.1s;
+}
+.btnOutline:hover {
+	border-color: var(--color-accent);
+	color: var(--color-accent);
+}

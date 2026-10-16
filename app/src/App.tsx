@@ -10,6 +10,11 @@ import MascotaDetalle from "./pages/MascotaDetalle"
 import PasaportePublico from "./pages/PasaportePublico"
 import PasaporteBusqueda from "./pages/PasaporteBusqueda"
 import Veterinarias from "./pages/Veterinarias"
+import MiEspacio from "./pages/MiEspacio"
+import Perfil from "./pages/Perfil"
+import Pasaportes from "./pages/Pasaportes"
+import MisVeterinarias from "./pages/MisVeterinarias"
+import Autorizaciones from "./pages/Autorizaciones"
 
 function App() {
 	return (
@@ -23,6 +28,12 @@ function App() {
 				<Route path="/mascotas/nueva" element={<MascotaNueva />} />
 				<Route path="/mascotas/:id" element={<MascotaDetalle />} />
 				<Route path="/veterinarias" element={<Veterinarias />} />
+				{/* Authenticated owner portal */}
+				<Route path="/mi-espacio" element={<MiEspacio />} />
+				<Route path="/perfil" element={<Perfil />} />
+				<Route path="/pasaportes" element={<Pasaportes />} />
+				<Route path="/mis-veterinarias" element={<MisVeterinarias />} />
+				<Route path="/autorizaciones" element={<Autorizaciones />} />
 				<Route path="/debug" element={<Debug />} />
 				<Route path="/debug/:contractName" element={<Debug />} />
 			</Route>
@@ -36,46 +47,83 @@ const AppLayout = () => {
 	return (
 		<div className={styles.AppLayout}>
 			<header className={styles.header}>
-				<NavLink to="/" className={styles.logo}>
+				<NavLink to={address ? "/mi-espacio" : "/"} className={styles.logo}>
 					<span className={styles.logoMark}>⬡</span>
 					<span>Vetra</span>
 				</NavLink>
 
 				<nav className={styles.headerNav}>
-					<NavLink
-						to="/"
-						end
-						className={({ isActive }) => (isActive ? styles.active : "")}
-					>
-						Inicio
-					</NavLink>
-					<a
-						href="#como-funciona"
-						className={styles.navAnchor}
-						onClick={(e) => {
-							if (window.location.pathname === "/") {
-								e.preventDefault()
-								document
-									.getElementById("como-funciona")
-									?.scrollIntoView({ behavior: "smooth" })
-							}
-						}}
-					>
-						Cómo funciona
-					</a>
-					<Link to="/pasaporte" className={styles.navLink}>
-						Consultar pasaporte
-					</Link>
-					<Link to="/veterinarias" className={styles.navLink}>
-						Para veterinarias
-					</Link>
-					{address && (
-						<NavLink
-							to="/mascotas"
-							className={({ isActive }) => (isActive ? styles.active : "")}
-						>
-							Mis mascotas
-						</NavLink>
+					{address ? (
+						// Authenticated nav
+						<>
+							<NavLink
+								to="/mi-espacio"
+								className={({ isActive }) => (isActive ? styles.active : "")}
+							>
+								Mi espacio
+							</NavLink>
+							<NavLink
+								to="/mascotas"
+								className={({ isActive }) => (isActive ? styles.active : "")}
+							>
+								Mascotas
+							</NavLink>
+							<NavLink
+								to="/pasaportes"
+								className={({ isActive }) => (isActive ? styles.active : styles.navLink)}
+							>
+								Pasaportes
+							</NavLink>
+							<NavLink
+								to="/mis-veterinarias"
+								className={({ isActive }) => (isActive ? styles.active : styles.navLink)}
+							>
+								Veterinarias
+							</NavLink>
+							<NavLink
+								to="/autorizaciones"
+								className={({ isActive }) => (isActive ? styles.active : styles.navLink)}
+							>
+								Autorizaciones
+							</NavLink>
+							<NavLink
+								to="/perfil"
+								className={({ isActive }) => (isActive ? styles.active : styles.navLink)}
+							>
+								Mi perfil
+							</NavLink>
+						</>
+					) : (
+						// Public nav
+						<>
+							<NavLink
+								to="/"
+								end
+								className={({ isActive }) => (isActive ? styles.active : "")}
+							>
+								Inicio
+							</NavLink>
+							<a
+								href="#como-funciona"
+								className={styles.navAnchor}
+								onClick={(e) => {
+									if (window.location.pathname === "/") {
+										e.preventDefault()
+										document
+											.getElementById("como-funciona")
+											?.scrollIntoView({ behavior: "smooth" })
+									}
+								}}
+							>
+								Cómo funciona
+							</a>
+							<Link to="/pasaporte" className={styles.navLink}>
+								Consultar pasaporte
+							</Link>
+							<Link to="/veterinarias" className={styles.navLink}>
+								Para veterinarias
+							</Link>
+						</>
 					)}
 				</nav>
 
