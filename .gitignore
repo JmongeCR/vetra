@@ -36,8 +36,27 @@ lerna-debug.log*
 .DS_Store
 
 # generated contract bindings + clients (Binding packages and flattened index.ts)
-app-lib/clients/*
+# Ignore everything by default
+app-lib/clients/**
+# Keep the placeholder
 !app-lib/clients/.gitkeep
+# Commit the flattened index and the pre-built dist of each client package
+# so Vercel can resolve workspace imports without running contracts:build
+!app-lib/clients/index.ts
+!app-lib/clients/reputation/
+app-lib/clients/reputation/**
+!app-lib/clients/reputation/package.json
+!app-lib/clients/reputation/dist/
+app-lib/clients/reputation/dist/**
+!app-lib/clients/reputation/dist/index.js
+!app-lib/clients/reputation/dist/index.d.ts
+!app-lib/clients/pet_identity/
+app-lib/clients/pet_identity/**
+!app-lib/clients/pet_identity/package.json
+!app-lib/clients/pet_identity/dist/
+app-lib/clients/pet_identity/dist/**
+!app-lib/clients/pet_identity/dist/index.js
+!app-lib/clients/pet_identity/dist/index.d.ts
 
 # Agent harness local-only state (skills and shared config ARE committed)
 .claude/settings.local.json
@@ -46,3 +65,4 @@ app-lib/clients/*
 
 # TypeScript incremental build info
 *.tsbuildinfo
+.vercel
