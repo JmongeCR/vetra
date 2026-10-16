@@ -1,5 +1,37 @@
 import { Link } from 'react-router-dom'
 import styles from './Dashboard.module.css'
+import { useClinicAuthContext } from '../contexts/clinicAuthContext'
+
+const VERIFICATION_STATUS: Record<string, { label: string; color: string }> = {
+  pending_verification: { label: 'Pendiente de verificación', color: '#b45309' },
+  verified:             { label: 'Verificada',                color: '#15803d' },
+  suspended:            { label: 'Suspendida',                color: '#b91c1c' },
+}
+
+function ClinicCard() {
+  const { member } = useClinicAuthContext()
+  if (!member) return null
+
+  const status = VERIFICATION_STATUS[member.verificationStatus] ?? VERIFICATION_STATUS.pending_verification
+
+  return (
+    <div className={styles.clinicCard}>
+      <div className={styles.clinicCardLeft}>
+        <span className={styles.clinicCardIcon}>🏥</span>
+        <div>
+          <strong className={styles.clinicCardName}>{member.clinicName}</strong>
+          <span className={styles.clinicCardRole}>{member.role}</span>
+        </div>
+      </div>
+      <span
+        className={styles.verificationBadge}
+        style={{ color: status.color, borderColor: status.color, background: `${status.color}14` }}
+      >
+        {status.label}
+      </span>
+    </div>
+  )
+}
 
 export default function Dashboard() {
   const QUICK_LINKS = [
@@ -38,17 +70,7 @@ export default function Dashboard() {
 
   return (
     <div className={styles.page}>
-      {/* Auth notice */}
-      <div className={styles.authNotice}>
-        <span className={styles.authIcon}>🔒</span>
-        <div>
-          <strong>Autenticación pendiente</strong>
-          <p>
-            El acceso por personal autorizado de la clínica se implementará en la
-            siguiente fase. Actualmente operás en modo prototipo.
-          </p>
-        </div>
-      </div>
+      <ClinicCard />
 
       {/* Quick access */}
       <section className={styles.section}>

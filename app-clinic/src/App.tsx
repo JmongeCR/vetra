@@ -5,6 +5,7 @@ import styles from './App.module.css'
 import { useClinicAuth } from './hooks/useClinicAuth'
 import { clinicSupabaseConfigured } from './lib/supabase'
 import { ClinicAuthContext } from './contexts/clinicAuthContext'
+import RegistrarClinica from './pages/RegistrarClinica'
 import Pacientes from './pages/Pacientes'
 import Dashboard from './pages/Dashboard'
 import Solicitudes from './pages/Solicitudes'
@@ -44,7 +45,7 @@ function usePageTitle(): string {
 // ── Inline login form ─────────────────────────────────────────────────────────
 
 function TopBarAuth() {
-  const { user, member, loading, memberError, signInWithEmail, signOut } = useClinicAuth()
+  const { user, member, loading, memberError, needsRegistration, signInWithEmail, signOut } = useClinicAuth()
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [sending, setSending] = useState(false)
@@ -62,6 +63,15 @@ function TopBarAuth() {
     return (
       <div className={styles.authBar}>
         <span className={styles.clinicLabel}>{member.clinicName} · {member.role}</span>
+        <button className={styles.btnSignOut} onClick={() => void signOut()}>Salir</button>
+      </div>
+    )
+  }
+
+  if (user && needsRegistration) {
+    return (
+      <div className={styles.authBar}>
+        <span className={styles.clinicLabel}>Registrá tu clínica para continuar</span>
         <button className={styles.btnSignOut} onClick={() => void signOut()}>Salir</button>
       </div>
     )
@@ -114,6 +124,15 @@ function TopBarAuth() {
 function AppShell() {
   const title = usePageTitle()
   const auth = useClinicAuth()
+
+  // Authenticated but no clinic → show registration page (full screen)
+  if (auth.user && !auth.loading && auth.needsRegistration) {
+    return (
+      <ClinicAuthContext.Provider value={auth}>
+        <RegistrarClinica onRegistered={auth.refreshMembership} signOut={auth.signOut} />
+      </ClinicAuthContext.Provider>
+    )
+  }
 
   return (
     <ClinicAuthContext.Provider value={auth}>

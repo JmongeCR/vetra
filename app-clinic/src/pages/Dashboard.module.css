@@ -5,31 +5,52 @@
 	max-width: 900px;
 }
 
-/* ── Auth notice ──────────────────────────────────────────────────────────── */
+/* ── Clinic info card ─────────────────────────────────────────────────────── */
 
-.authNotice {
+.clinicCard {
 	display: flex;
+	align-items: center;
+	justify-content: space-between;
 	gap: 1rem;
-	background: rgba(139, 92, 246, 0.06);
-	border: 1px solid rgba(139, 92, 246, 0.25);
+	background: var(--color-surface, #fff);
+	border: 1px solid var(--color-border, #e8e4df);
 	border-radius: 12px;
-	padding: 1.1rem 1.25rem;
+	padding: 1rem 1.25rem;
 }
 
-.authIcon { font-size: 1.25rem; flex-shrink: 0; margin-top: 0.1rem; }
+.clinicCardLeft {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
 
-.authNotice strong {
+.clinicCardIcon { font-size: 1.4rem; }
+
+.clinicCardName {
 	display: block;
-	font-size: 0.875rem;
+	font-size: 0.9rem;
+	font-weight: 700;
 	color: var(--color-text, #2c2724);
-	margin-bottom: 0.25rem;
 }
 
-.authNotice p {
-	font-size: 0.8rem;
+.clinicCardRole {
+	display: block;
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
 	color: var(--color-text-muted, #a09990);
-	margin: 0;
-	line-height: 1.5;
+	margin-top: 0.1rem;
+}
+
+.verificationBadge {
+	font-size: 0.72rem;
+	font-weight: 700;
+	padding: 0.25rem 0.65rem;
+	border-radius: 20px;
+	border: 1px solid;
+	white-space: nowrap;
+	flex-shrink: 0;
 }
 
 /* ── Section ──────────────────────────────────────────────────────────────── */
