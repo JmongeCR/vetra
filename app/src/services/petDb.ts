@@ -215,18 +215,28 @@ export async function deletePetFromDb(petId: string): Promise<void> {
 	if (error) throw new Error(`Failed to delete pet: ${error.message}`)
 }
 
-/** Update the Stellar status of a pet (called after blockchain registration). */
-export async function updateStellarStatus(
-	petId: string,
-	status: "local" | "pending" | "registered",
-	txHash?: string,
-): Promise<void> {
-	if (!supabaseConfigured) return
-	const patch: Record<string, unknown> = { status }
-	if (txHash) { patch.transaction_hash = txHash; patch.registered_at = new Date().toISOString() }
-	const { error } = await supabase
-		.from("stellar_identities")
-		.update(patch)
-		.eq("pet_id", petId)
-	if (error) throw new Error(`Failed to update stellar status: ${error.message}`)
+/**
+ * Atomically transition stellar_identities from local → pending.
+ * Must be called before presenting the Stellar signing prompt to
+ * prevent duplicate registrations from concurrent tabs.
+ */
+export async function claimStellarPending(petId: string, metadataHash: string): Promise<void> {
+	if (!supabaseConfigured) throw new Error("Supabase not configured")
+	const { error } = await supabase.rpc("claim_stellar_pending", {
+		p_pet_id: petId,
+		p_metadata_hash: metadataHash,
+	})
+	if (error) throw new Error(`claim_stellar_pending: ${error.message}`)
 }
+
+/**
+ * Atomically transition stellar_identities from pending → local.
+ * Idempotent on rows that are not in pending status.
+ * Called when the user cancels signing or the transaction fails.
+ */
+export async function rollbackStellarPending(petId: string): Promise<void> {
+	if (!supabaseConfigured) return
+	const { error } = await supabase.rpc("rollback_stellar_pending", { p_pet_id: petId })
+	if (error) throw new Error(`rollback_stellar_pending: ${error.message}`)
+}
+

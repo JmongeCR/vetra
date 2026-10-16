@@ -3,30 +3,28 @@
 // State machine for a pet's Stellar status:
 //   local  →  pending  →  registered
 //
-// "local"     : stored only in localStorage on the owner's browser.
-// "pending"   : registerOnChain called, tx signed, awaiting ledger confirmation.
+// "local"     : stored only in Supabase/localStorage on the owner's device.
+// "pending"   : claimStellarPending called, tx signed, awaiting ledger confirmation.
 // "registered": confirmed by Stellar Testnet, txHash recorded.
 //
-// Sprint 4A: full integration flow is designed and typed.
-//   All contract reads return stub values (null / false / []) until
-//   Sprint 5 adds the contract to environments.toml and runs contracts:build.
-//   registerOnChain is fully implemented but its internal client call
-//   is guarded by a CONTRACT_DEPLOYED flag so it cannot be triggered
-//   before the contract is live on Testnet.
-//
-// Sprint 5 activation: set CONTRACT_DEPLOYED = true and uncomment the
-//   three lines marked "Sprint 5" below.
+// Activation: CONTRACT_DEPLOYED = true after verifying the deployed
+//   contract at CAWA6S352RZWOPZENPU4C5KKLC47BQKT5OAIOVALIVK3YLLFWDH7ZBYJ.
 
 import type { StellarStatus } from "../types/pet"
 import type { Pet } from "../types/pet"
-import { updatePet } from "./petStorage"
+import type { SignTransactionFn } from "../cavos/context"
+import { supabaseConfigured, supabaseFunctionsUrl, getSupabaseAccessToken } from "../lib/supabase"
+import { fundAccount } from "@stellar-scaffold/app-lib"
+import {
+	claimStellarPending,
+	rollbackStellarPending,
+} from "./petDb"
 
 // ── Deployment gate ─────────────────────────────────────────────────────────
-//
-// Prevents the write path from executing until the contract has been deployed
-// to Testnet and the generated client is available.
-// Sprint 5: change to true after `npm run contracts:build` succeeds.
-const CONTRACT_DEPLOYED = false
+
+const CONTRACT_DEPLOYED = true
+
+const PET_IDENTITY_CONTRACT_ID = "CAWA6S352RZWOPZENPU4C5KKLC47BQKT5OAIOVALIVK3YLLFWDH7ZBYJ"
 
 // ── Network constants ───────────────────────────────────────────────────────
 
@@ -52,9 +50,8 @@ export interface OnChainPetIdentity {
 
 // ── Metadata hash ───────────────────────────────────────────────────────────
 //
-// What goes into the hash: only non-sensitive, publicly shareable fields.
+// Only non-sensitive, publicly shareable fields go into the hash.
 // Never: owner name, owner address, medical history, owner PII.
-// The hash lets a verifier check that the off-chain data was not tampered with.
 
 export interface PetPublicMetadata {
 	vetId: string
@@ -88,14 +85,14 @@ export async function computeMetadataHash(pet: Pet): Promise<string> {
 // ── Status helpers ──────────────────────────────────────────────────────────
 
 export const STELLAR_STATUS_LABELS: Record<StellarStatus, string> = {
-	local: "Solo en este dispositivo",
+	local: "Registrada en Vetra",
 	pending: "Pendiente en Stellar Testnet",
-	registered: "Registrado en Stellar Testnet",
+	registered: "Registrada en Stellar Testnet",
 }
 
 export const STELLAR_STATUS_DESCRIPTIONS: Record<StellarStatus, string> = {
 	local:
-		"Este registro existe únicamente en tu navegador. " +
+		"Este registro existe en Vetra. " +
 		"Todavía no está vinculado a una identidad blockchain.",
 	pending:
 		"El registro fue enviado a Stellar Testnet y está esperando confirmación.",
@@ -104,44 +101,44 @@ export const STELLAR_STATUS_DESCRIPTIONS: Record<StellarStatus, string> = {
 		"El ID universal es permanente y verificable.",
 }
 
-// ── Contract reads (stubs until Sprint 5) ──────────────────────────────────
+// ── Contract reads ──────────────────────────────────────────────────────────
 
 /**
  * Look up a pet's on-chain identity by its VET-ID.
- * Returns null if not yet registered or if the contract is not deployed.
+ * Returns null if not yet registered or the contract is not deployed.
  */
 export async function queryOnChainIdentity(
-	_petId: string,
+	petId: string,
 ): Promise<OnChainPetIdentity | null> {
 	if (!CONTRACT_DEPLOYED) return null
-	// Sprint 5: uncomment and remove the early return above.
-	// const { petIdentity } = await import("@stellar-scaffold/app-lib/clients")
-	// return (await petIdentity.get_pet({ pet_id: _petId })).result ?? null
-	return null
+	const { petIdentity } = await import("@stellar-scaffold/app-lib/clients")
+	const raw = (await petIdentity.get_pet({ pet_id: petId })).result
+	if (!raw) return null
+	return {
+		owner: raw.owner,
+		registeredAt: Number(raw.registered_at),
+		metadataHash: raw.metadata_hash,
+	}
 }
 
 /**
  * Check whether a VET-ID is already recorded on Testnet.
  * Always false until the contract is deployed.
  */
-export async function checkPetExistsOnChain(_petId: string): Promise<boolean> {
+export async function checkPetExistsOnChain(petId: string): Promise<boolean> {
 	if (!CONTRACT_DEPLOYED) return false
-	// Sprint 5: uncomment.
-	// const { petIdentity } = await import("@stellar-scaffold/app-lib/clients")
-	// return (await petIdentity.pet_exists({ pet_id: _petId })).result
-	return false
+	const { petIdentity } = await import("@stellar-scaffold/app-lib/clients")
+	return (await petIdentity.pet_exists({ pet_id: petId })).result
 }
 
 /**
  * Return all VET-IDs registered by a Stellar address.
  * Returns [] until the contract is deployed.
  */
-export async function queryPetsByOwner(_ownerAddress: string): Promise<string[]> {
+export async function queryPetsByOwner(ownerAddress: string): Promise<string[]> {
 	if (!CONTRACT_DEPLOYED) return []
-	// Sprint 5: uncomment.
-	// const { petIdentity } = await import("@stellar-scaffold/app-lib/clients")
-	// return (await petIdentity.get_by_owner({ owner: _ownerAddress })).result
-	return []
+	const { petIdentity } = await import("@stellar-scaffold/app-lib/clients")
+	return (await petIdentity.get_by_owner({ owner: ownerAddress })).result
 }
 
 // ── Contract write — register on Testnet ───────────────────────────────────
@@ -171,86 +168,100 @@ export type RegisterOnChainError =
  *
  * SECURITY CONSTRAINTS:
  * - `signTransaction` must come from `useWallet()` — never imported directly.
- * - This function does NOT sign automatically. It calls `signTransaction` which
- *   presents a confirmation dialog to the owner via Cavos or a wallet extension.
- * - `ownerAddress` must match the wallet that is currently connected.
- * - The function throws / returns an error object — it never silently swallows
- *   a failed transaction.
- *
- * FLOW:
- *   1. Guard: contract deployed + wallet connected + address present.
- *   2. Compute metadata hash from public pet fields (no PII).
- *   3. Call petIdentity.register_pet — returns an AssembledTransaction.
- *   4. Call tx.signAndSend({ signTransaction }) — owner sees a signing prompt.
- *      This step requires the owner's explicit approval. No auto-sign.
- *   5. On success: update pet in localStorage (status → "registered", txHash).
- *   6. Return txHash + explorerUrl.
- *
- * Sprint 5: set CONTRACT_DEPLOYED = true at the top of this file to activate.
+ * - Calls `claimStellarPending` (Supabase RPC) before presenting the signing
+ *   prompt, preventing duplicate registrations from concurrent tabs.
+ * - Never signs automatically. The owner sees a Cavos confirmation dialog.
+ * - Calls `confirmStellarRegistration` on success, `rollbackStellarPending`
+ *   on any failure, maintaining the local→pending→registered state machine.
  */
 export async function registerOnChain(
 	pet: Pet,
 	ownerAddress: string,
-	signTransaction: (xdr: string, opts?: { network: string }) => Promise<string>,
+	signTransaction: SignTransactionFn,
 ): Promise<RegisterOnChainResult | RegisterOnChainError> {
-	// ── Guard 1: contract not yet deployed ──────────────────────────────────
-	if (!CONTRACT_DEPLOYED) {
-		return { kind: "not_deployed" }
-	}
+	if (!CONTRACT_DEPLOYED) return { kind: "not_deployed" }
+	if (!ownerAddress) return { kind: "no_address" }
+	if (pet.ownerAddress && pet.ownerAddress !== ownerAddress) return { kind: "no_wallet" }
 
-	// ── Guard 2: wallet must be connected ───────────────────────────────────
-	if (!ownerAddress) {
-		return { kind: "no_address" }
-	}
-
-	// ── Guard 3: pet must belong to this wallet ──────────────────────────────
-	// (ownerAddress was set when the pet was created with Cavos connected)
-	if (pet.ownerAddress && pet.ownerAddress !== ownerAddress) {
-		return { kind: "no_wallet" }
-	}
+	const metadataHash = await computeMetadataHash(pet)
 
 	try {
-		// Sprint 5: replace stub import with real generated client.
-		// const { petIdentity } = await import("@stellar-scaffold/app-lib/clients")
+		// Reserve the slot atomically before the owner sees the signing prompt.
+		// Prevents a second tab from triggering a duplicate registration.
+		if (supabaseConfigured) {
+			await claimStellarPending(pet.id, metadataHash)
+		}
 
-		const metadataHash = await computeMetadataHash(pet)
+		const { petIdentity: client } = await import("@stellar-scaffold/app-lib/clients")
 
-		// Sprint 5: uncomment these lines:
-		// const tx = await petIdentity.register_pet({
-		//     owner: ownerAddress,
-		//     pet_id: pet.vetId,
-		//     metadata_hash: metadataHash,
-		// })
-		// if (tx.result.isErr()) {
-		//     const err = tx.result.unwrapErr()
-		//     if (err.message.includes("AlreadyRegistered")) {
-		//         return { kind: "already_registered", vetId: pet.vetId }
-		//     }
-		//     if (err.message.includes("InvalidPetId")) {
-		//         return { kind: "invalid_pet_id", vetId: pet.vetId }
-		//     }
-		//     return { kind: "network_error", message: err.message }
-		// }
-		// await tx.signAndSend({ signTransaction })
+		const buildTx = () =>
+			client.register_pet(
+				{
+					owner: ownerAddress,
+					pet_id: pet.vetId,
+					metadata_hash: metadataHash,
+				},
+				{ publicKey: ownerAddress },
+			)
 
-		// Placeholder — unreachable because CONTRACT_DEPLOYED = false above.
-		// Replace with real txHash from the Soroban response once deployed.
-		const txHash = metadataHash.slice(0, 64) // placeholder
-		const registeredAt = Math.floor(Date.now() / 1000)
-
-		// ── Update localStorage ──────────────────────────────────────────────
-		updatePet(pet.id, {
-			stellarStatus: "registered",
-			stellarTxHash: txHash,
-			ownerAddress,
+		// On Testnet a fresh Cavos wallet may not have been funded yet.
+		// If the Stellar account doesn't exist, fund it via Friendbot once and retry.
+		let tx = await buildTx().catch(async (err: unknown) => {
+			const msg = err instanceof Error ? err.message : String(err)
+			if (!msg.includes("Account not found")) throw err
+			const funded = await fundAccount(ownerAddress)
+			if (!funded.ok) throw new Error(`Account not found and Friendbot failed: ${funded.message}`)
+			return buildTx()
 		})
+
+		if (tx.result.isErr()) {
+			if (supabaseConfigured) {
+				await rollbackStellarPending(pet.id).catch(() => {})
+			}
+			const err = tx.result.unwrapErr()
+			if (err.message.includes("AlreadyRegistered")) {
+				return { kind: "already_registered", vetId: pet.vetId }
+			}
+			if (err.message.includes("InvalidPetId")) {
+				return { kind: "invalid_pet_id", vetId: pet.vetId }
+			}
+			return { kind: "network_error", message: err.message }
+		}
+
+		const sent = await tx.signAndSend({ signTransaction })
+
+		// signAndSend does NOT throw on ledger FAILED — must check explicitly.
+		if (sent.getTransactionResponse && sent.getTransactionResponse.status !== "SUCCESS") {
+			if (supabaseConfigured) {
+				await rollbackStellarPending(pet.id).catch(() => {})
+			}
+			return { kind: "network_error", message: `Transaction failed on ledger (status: ${sent.getTransactionResponse.status})` }
+		}
+
+		const txHash = sent.sendTransactionResponse?.hash ?? ""
+
+		// Confirm via Edge Function — server verifies on-chain state before writing.
+		if (supabaseConfigured) {
+			const confirmResult = await callStellarVerify({
+				petId: pet.id,
+				action: "confirm",
+				txHash,
+			})
+			if (!confirmResult.ok) {
+				await rollbackStellarPending(pet.id).catch(() => {})
+				return { kind: "network_error", message: confirmResult.error ?? "Verification failed" }
+			}
+		}
 
 		return {
 			txHash,
-			registeredAt,
+			registeredAt: Math.floor(Date.now() / 1000),
 			explorerUrl: explorerTxUrl(txHash),
 		}
 	} catch (err) {
+		if (supabaseConfigured) {
+			await rollbackStellarPending(pet.id).catch(() => {})
+		}
 		const message = err instanceof Error ? err.message : String(err)
 		if (message.toLowerCase().includes("cancel") || message.toLowerCase().includes("reject")) {
 			return { kind: "sign_cancelled" }
@@ -259,11 +270,124 @@ export async function registerOnChain(
 	}
 }
 
+// ── Edge Function client ────────────────────────────────────────────────────
+
+interface StellarVerifyResponse {
+	ok: boolean
+	error?: string
+	onChainOwner?: string
+	onChainHash?: string
+	storedHash?: string
+	alreadyRegistered?: boolean
+}
+
+/**
+ * Call the stellar-verify Edge Function.
+ * Sends the user's JWT automatically via getSupabaseAccessToken().
+ * Never throws — returns { ok: false, error: "..." } on any failure.
+ */
+async function callStellarVerify(
+	payload: { petId: string; action: "confirm"; txHash: string } | { petId: string; action: "recover" },
+): Promise<StellarVerifyResponse> {
+	if (!supabaseFunctionsUrl) return { ok: false, error: "Supabase not configured" }
+	const token = getSupabaseAccessToken()
+	if (!token) return { ok: false, error: "Not authenticated" }
+
+	try {
+		const res = await fetch(`${supabaseFunctionsUrl}/stellar-verify`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${token}`,
+			},
+			body: JSON.stringify(payload),
+		})
+		const body = await res.json() as StellarVerifyResponse
+		return { ...body, ok: res.ok }
+	} catch (err) {
+		return { ok: false, error: err instanceof Error ? err.message : String(err) }
+	}
+}
+
+// ── Pending state recovery ──────────────────────────────────────────────────
+
+/**
+ * Result of verifying an on-chain identity and recovering a pending registration.
+ *
+ * - "registered": Edge Function verified on-chain state and confirmed in Supabase.
+ * - "not_found": VET-ID is not on Stellar Testnet yet.
+ * - "conflict_owner": on-chain identity belongs to a different Stellar address.
+ * - "conflict_hash": owner matches but metadata_hash differs from claim-time value.
+ * - "not_deployed": CONTRACT_DEPLOYED is false; verification unavailable.
+ * - "error": network or unexpected error.
+ */
+export type RecoveryResult =
+	| { kind: "registered" }
+	| { kind: "not_found" }
+	| { kind: "conflict_owner"; onChainOwner: string }
+	| { kind: "conflict_hash"; onChainHash: string; storedHash: string }
+	| { kind: "not_deployed" }
+	| { kind: "error"; message: string }
+
+/**
+ * Verify a pet's on-chain status and recover its Supabase record via the
+ * stellar-verify Edge Function.
+ *
+ * All on-chain verification (pet_exists, get_pet, owner check, hash check)
+ * happens server-side. The client only triggers the action and handles the result.
+ *
+ * SECURITY: The Edge Function is the sole write path to status='registered'.
+ *           This function cannot promote a pet without server-side on-chain proof.
+ */
+export async function verifyAndRecoverPending(
+	pet: Pet,
+	_ownerAddress: string,
+): Promise<RecoveryResult> {
+	if (!CONTRACT_DEPLOYED) return { kind: "not_deployed" }
+
+	const result = await callStellarVerify({ petId: pet.id, action: "recover" })
+
+	if (result.ok) return { kind: "registered" }
+
+	switch (result.error) {
+		case "not_found":
+			return { kind: "not_found" }
+		case "conflict_owner":
+			return { kind: "conflict_owner", onChainOwner: result.onChainOwner ?? "" }
+		case "conflict_hash":
+			return {
+				kind: "conflict_hash",
+				onChainHash: result.onChainHash ?? "",
+				storedHash: result.storedHash ?? "",
+			}
+		default:
+			return { kind: "error", message: result.error ?? "Unknown error" }
+	}
+}
+
+/** User-facing message for each RecoveryResult kind. */
+export function recoveryMessage(result: RecoveryResult): string {
+	switch (result.kind) {
+		case "registered":
+			return "La identidad fue encontrada en Stellar Testnet y el registro fue recuperado."
+		case "not_found":
+			return "La identidad no está registrada en Stellar Testnet todavía."
+		case "conflict_owner":
+			return `Conflicto: la identidad en Stellar pertenece a la dirección ${result.onChainOwner.slice(0, 6)}…${result.onChainOwner.slice(-4)}, no a tu billetera.`
+		case "conflict_hash":
+			return "Conflicto: el hash de metadatos en Stellar no coincide con el registrado en Vetra. Posible inconsistencia de datos."
+		case "not_deployed":
+			return "La verificación on-chain aún no está disponible (contrato no activado)."
+		case "error":
+			return `Error al verificar: ${result.message}`
+	}
+}
+
 /** User-facing message for each RegisterOnChainError kind. */
 export function registerErrorMessage(error: RegisterOnChainError): string {
 	switch (error.kind) {
 		case "not_deployed":
-			return "El contrato pet-identity aún no está desplegado en Stellar Testnet. Disponible en Sprint 5."
+			return "El contrato pet-identity aún no está disponible en Stellar Testnet."
 		case "no_wallet":
 			return "La billetera conectada no coincide con el propietario de esta mascota."
 		case "no_address":

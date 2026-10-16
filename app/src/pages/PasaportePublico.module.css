@@ -159,6 +159,19 @@
 	margin: 0 0 0.75rem;
 }
 
+.explorerLink {
+	display: inline-block;
+	font-size: 0.8rem;
+	color: var(--color-accent);
+	text-decoration: none;
+	font-weight: 600;
+	margin-bottom: 0.75rem;
+}
+
+.explorerLink:hover {
+	text-decoration: underline;
+}
+
 .privacy {
 	font-size: 0.72rem;
 	color: var(--color-text-muted);

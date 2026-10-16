@@ -2,15 +2,22 @@ import { useEffect, useState, useRef } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import QRCode from "qrcode"
 import { getPetById } from "../services/petStorage"
-import { fetchPetById, deletePetFromDb } from "../services/petDb"
+import { fetchPetById, deletePetFromDb, rollbackStellarPending } from "../services/petDb"
 import { getSignedPhotoUrl } from "../services/photoStorage"
 import { supabaseConfigured } from "../lib/supabase"
 import {
 	STELLAR_STATUS_LABELS,
 	STELLAR_STATUS_DESCRIPTIONS,
+	registerOnChain,
+	registerErrorMessage,
+	verifyAndRecoverPending,
+	recoveryMessage,
+	explorerTxUrl,
+	type RecoveryResult,
 } from "../services/petIdentity"
 import { SPECIES_LABELS, SEX_LABELS, SPECIES_EMOJI } from "../types/pet"
 import type { Pet } from "../types/pet"
+import { useWallet } from "../hooks/useWallet"
 import styles from "./MascotaDetalle.module.css"
 
 function formatDate(iso?: string, estimated?: boolean): string {
@@ -47,11 +54,20 @@ function shortAddress(addr?: string): string {
 export default function MascotaDetalle() {
 	const { id } = useParams<{ id: string }>()
 	const navigate = useNavigate()
+	const { address, signTransaction } = useWallet()
 	const [pet, setPet] = useState<Pet | null>(null)
 	const [photoSrc, setPhotoSrc] = useState<string | undefined>()
 	const [notFound, setNotFound] = useState(false)
 	const [loading, setLoading] = useState(true)
 	const [qrDataUrl, setQrDataUrl] = useState<string>("")
+	const [certifying, setCertifying] = useState(false)
+	const [certError, setCertError] = useState<string | null>(null)
+	const [certTxHash, setCertTxHash] = useState<string | null>(null)
+	const [recovering, setRecovering] = useState(false)
+	const [recoveryResult, setRecoveryResult] = useState<RecoveryResult | null>(null)
+	const [rollingBack, setRollingBack] = useState(false)
+	const [rollbackError, setRollbackError] = useState<string | null>(null)
+	const [petSource, setPetSource] = useState<"db" | "local">("local")
 	const passportRef = useRef<HTMLDivElement>(null)
 
 	useEffect(() => {
@@ -63,6 +79,7 @@ export default function MascotaDetalle() {
 			if (supabaseConfigured) {
 				try {
 					found = await fetchPetById(id!)
+					if (found) setPetSource("db")
 				} catch {
 					// fall through to localStorage
 				}
@@ -221,9 +238,19 @@ export default function MascotaDetalle() {
 								</p>
 								{pet.stellarStatus === "local" && (
 									<p className={styles.stellarNote}>
-										El registro en Stellar Testnet estará disponible en
-										el Sprint 5 de Vetra.
+										Certificá este pasaporte en Stellar Testnet desde la
+										sección de identidad blockchain.
 									</p>
+								)}
+								{(pet.stellarStatus === "registered" || certTxHash) && (
+									<a
+										href={explorerTxUrl(certTxHash ?? pet.stellarTxHash ?? "")}
+										target="_blank"
+										rel="noopener noreferrer"
+										className={styles.stellarNote}
+									>
+										Ver en Stellar Explorer →
+									</a>
 								)}
 							</div>
 
@@ -236,9 +263,9 @@ export default function MascotaDetalle() {
 										className={styles.qr}
 									/>
 									<p className={styles.qrCaption}>
-										Funciona en <strong>este dispositivo</strong>. El pasaporte
-										público verificable estará disponible al registrar la
-										identidad en Stellar Testnet (Sprint 5).
+										{petSource === "db"
+											? "Escaneable desde cualquier dispositivo."
+											: "Guardado localmente. Registrá en Stellar para acceso universal."}
 									</p>
 									<p className={styles.qrCaptionSub}>
 										No expone datos médicos ni personales.
@@ -258,12 +285,119 @@ export default function MascotaDetalle() {
 						>
 							{STELLAR_STATUS_LABELS[pet.stellarStatus]}
 						</div>
+
 						{pet.stellarStatus === "local" && (
-							<p className={styles.sideNote}>
-								El contrato <code>pet-identity</code> está diseñado y listo
-								para implementación. El despliegue en Stellar Testnet requiere
-								autorización en Sprint 5.
-							</p>
+							<>
+								<button
+									className={styles.btnAction}
+									disabled={certifying}
+									onClick={async () => {
+										if (!address || !signTransaction) {
+											setCertError("Conectá tu billetera primero.")
+											return
+										}
+										setCertifying(true)
+										setCertError(null)
+										const result = await registerOnChain(pet, address, signTransaction)
+										setCertifying(false)
+										if ("txHash" in result) {
+											setCertTxHash(result.txHash)
+											setPet(prev => prev
+												? { ...prev, stellarStatus: "registered", stellarTxHash: result.txHash }
+												: null
+											)
+										} else {
+											setCertError(registerErrorMessage(result))
+										}
+									}}
+								>
+									{certifying ? "Certificando…" : "⬡ Certificar en Stellar"}
+								</button>
+								{certError && (
+									<p className={styles.sideNote} style={{ color: "var(--color-error, #c0392b)" }}>
+										{certError}
+									</p>
+								)}
+							</>
+						)}
+
+						{pet.stellarStatus === "pending" && (
+							<>
+								<p className={styles.sideNote}>
+									La certificación fue iniciada pero no confirmada. Verificá el estado actual en Stellar.
+								</p>
+								<button
+									className={styles.btnAction}
+									disabled={recovering}
+									onClick={async () => {
+										if (!address) {
+											setRecoveryResult({ kind: "error", message: "Conectá tu billetera primero." })
+											return
+										}
+										setRecovering(true)
+										setRecoveryResult(null)
+										const result = await verifyAndRecoverPending(pet, address)
+										setRecovering(false)
+										setRecoveryResult(result)
+										if (result.kind === "registered") {
+											setPet(prev => prev ? { ...prev, stellarStatus: "registered" } : null)
+										}
+									}}
+								>
+									{recovering ? "Verificando…" : "⬡ Verificar estado en Stellar"}
+								</button>
+
+								{recoveryResult && recoveryResult.kind !== "registered" && (
+									<p
+										className={styles.sideNote}
+										style={{ color: recoveryResult.kind === "not_found" ? undefined : "var(--color-error, #c0392b)" }}
+									>
+										{recoveryMessage(recoveryResult)}
+									</p>
+								)}
+
+								{(recoveryResult?.kind === "not_found" || recoveryResult?.kind === "not_deployed") && (
+									<>
+										<p className={styles.sideNote} style={{ color: "var(--color-warning, #e67e22)" }}>
+											⚠️ Si firmaste la transacción hace menos de 5 minutos, esperá antes de revertir.
+										</p>
+										<button
+											className={styles.btnActionDanger}
+											disabled={rollingBack}
+											onClick={async () => {
+												setRollingBack(true)
+												setRollbackError(null)
+												try {
+													await rollbackStellarPending(pet.id)
+													setPet(prev => prev ? { ...prev, stellarStatus: "local" } : null)
+												} catch (err) {
+													setRollbackError(err instanceof Error ? err.message : String(err))
+												}
+												setRollingBack(false)
+											}}
+										>
+											{rollingBack ? "Revirtiendo…" : "Revertir a local"}
+										</button>
+										{rollbackError && (
+											<p className={styles.sideNote} style={{ color: "var(--color-error, #c0392b)" }}>
+												{rollbackError}
+											</p>
+										)}
+									</>
+								)}
+							</>
+						)}
+
+						{(pet.stellarStatus === "registered" || certTxHash)
+							&& (certTxHash ?? pet.stellarTxHash) && (
+							<a
+								href={explorerTxUrl(certTxHash ?? pet.stellarTxHash ?? "")}
+								target="_blank"
+								rel="noopener noreferrer"
+								className={styles.sideNote}
+							>
+								Ver transacción en Stellar Explorer →
+							</a>
 						)}
 					</div>
 
@@ -314,9 +448,11 @@ export default function MascotaDetalle() {
 						</div>
 					</div>
 
-					<p className={styles.disclaimer}>
-						⚠️ Registro local · No certificado en blockchain
-					</p>
+					{pet.stellarStatus === "local" && (
+						<p className={styles.disclaimer}>
+							⚠️ Registro local · No certificado en blockchain
+						</p>
+					)}
 				</aside>
 			</div>
 		</div>

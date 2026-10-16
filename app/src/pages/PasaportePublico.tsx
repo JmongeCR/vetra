@@ -4,7 +4,7 @@ import { getPetByVetId } from "../services/petStorage"
 import { fetchPublicPassport } from "../services/petDb"
 import { getSignedPhotoUrl } from "../services/photoStorage"
 import { supabaseConfigured } from "../lib/supabase"
-import { STELLAR_STATUS_LABELS } from "../services/petIdentity"
+import { STELLAR_STATUS_LABELS, explorerTxUrl } from "../services/petIdentity"
 import { SPECIES_LABELS, SEX_LABELS, SPECIES_EMOJI } from "../types/pet"
 import type { PetSpecies, PetSex, StellarStatus } from "../types/pet"
 import styles from "./PasaportePublico.module.css"
@@ -27,6 +27,7 @@ interface PassportDisplay {
 	color: string
 	photoSrc?: string
 	stellarStatus: StellarStatus
+	txHash?: string
 	source: "db" | "local"
 }
 
@@ -58,6 +59,7 @@ export default function PasaportePublico() {
 							color: data.color,
 							photoSrc,
 							stellarStatus: (data.stellar_status as StellarStatus) ?? "local",
+							txHash: data.stellar_tx_hash ?? undefined,
 							source: "db",
 						})
 						return
@@ -107,13 +109,13 @@ export default function PasaportePublico() {
 					<div className={styles.localOnlyBox}>
 						<strong>¿Por qué ocurre esto?</strong>
 						<p>
-							El pasaporte público estará disponible cuando la identidad sea
-							certificada en <strong>Stellar Testnet</strong> (Sprint 5), o
-							cuando el propietario haya sincronizado su registro con Supabase.
+							El pasaporte público estará disponible cuando la mascota sea
+							registrada en <strong>Vetra</strong> o certificada en{" "}
+							<strong>Stellar Testnet</strong>.
 						</p>
 						<p>
-							Si sos el propietario, abrí este enlace desde el mismo dispositivo
-							y navegador donde registraste la mascota.
+							Si sos el propietario, verificá que hayas guardado el registro
+							en Vetra desde tu cuenta.
 						</p>
 					</div>
 					<Link to="/" className={styles.btn}>Ir a Vetra</Link>
@@ -185,9 +187,20 @@ export default function PasaportePublico() {
 					{passport.stellarStatus === "local" && (
 						<p className={styles.note}>
 							{passport.source === "local"
-								? "Este registro está almacenado localmente en este dispositivo. La identidad aún no ha sido certificada en Stellar Testnet."
-								: "Este registro está en la base de datos. La identidad aún no ha sido certificada en Stellar Testnet."}
+								? "Guardado localmente. La identidad aún no fue certificada en Stellar."
+								: "Registrada en Vetra. La identidad aún no fue certificada en Stellar."}
 						</p>
+					)}
+
+					{passport.stellarStatus === "registered" && passport.txHash && (
+						<a
+							href={explorerTxUrl(passport.txHash)}
+							target="_blank"
+							rel="noopener noreferrer"
+							className={styles.explorerLink}
+						>
+							Ver certificación en Stellar Explorer →
+						</a>
 					)}
 
 					<p className={styles.privacy}>

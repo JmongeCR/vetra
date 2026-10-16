@@ -35,7 +35,6 @@ export const CavosRoot = ({ children }: { children: ReactNode }) => {
 			modal={{
 				appName: "Vetra",
 				providers: ["email", "google"],
-				emailMode: "otp",
 				primaryColor: "#4A1942",
 			}}
 		>

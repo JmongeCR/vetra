@@ -55,6 +55,16 @@ export function isSupabaseTokenValid(): boolean {
 	return _stored.expiresAt > Math.floor(Date.now() / 1000)
 }
 
+/** Base URL for Supabase Edge Functions. Null when Supabase is not configured. */
+export const supabaseFunctionsUrl: string | null = supabaseConfigured
+	? `${SUPABASE_URL}/functions/v1`
+	: null
+
+/** Return the current valid JWT, or null if expired / absent. */
+export function getSupabaseAccessToken(): string | null {
+	return isSupabaseTokenValid() ? _stored!.token : null
+}
+
 /** Supabase client. Always defined — but operations will fail gracefully when
  *  supabaseConfigured is false (the client is initialized with placeholder URLs). */
 export const supabase: SupabaseClient = supabaseConfigured
