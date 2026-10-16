@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { Patient, PatientSpecies, PatientSex } from '../types/patient'
+import type { PatientSpecies, PatientSex } from '../types/patient'
 import { SPECIES_LABELS, SEX_LABELS, SPECIES_EMOJI } from '../types/patient'
+import { listPatients, createPatient, type ClinicPatient } from '../services/patientsDb'
 import { searchPetByVetId, createAccessRequest, type PassportData } from '../services/clinicDb'
 import { useClinicAuthContext } from '../contexts/clinicAuthContext'
 import { clinicSupabaseConfigured } from '../lib/supabase'
@@ -144,42 +145,50 @@ function VetraSearchPanel() {
 
 interface PanelProps {
   onClose: () => void
-  onSave: (p: Patient) => void
+  onSaved: (p: ClinicPatient) => void
 }
 
 const SPECIES_OPTIONS: PatientSpecies[] = ['dog', 'cat', 'bird', 'rabbit', 'reptile', 'other']
 const SEX_OPTIONS: PatientSex[] = ['male', 'female', 'unknown']
 
-function RegistrationPanel({ onClose, onSave }: PanelProps) {
+function RegistrationPanel({ onClose, onSaved }: PanelProps) {
+  const { member } = useClinicAuthContext()
   const [form, setForm] = useState({
     name: '', species: 'dog' as PatientSpecies, breed: '',
     sex: 'unknown' as PatientSex, birthDate: '', birthDateEstimated: false,
-    microchip: '', ownerName: '', ownerPhone: '', vetId: '',
+    microchip: '', ownerName: '', ownerPhone: '', ownerEmail: '', vetId: '',
   })
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((f) => ({ ...f, [k]: v }))
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name.trim())      { setError('El nombre es obligatorio.'); return }
-    if (!form.ownerName.trim()) { setError('El responsable es obligatorio.'); return }
-    onSave({
-      id: crypto.randomUUID(),
-      name: form.name.trim(),
+    if (!form.name.trim())      { setError('El nombre del paciente es obligatorio.'); return }
+    if (!form.ownerName.trim()) { setError('El nombre del responsable es obligatorio.'); return }
+    if (!member) { setError('Sesión no válida.'); return }
+    setSaving(true)
+    setError('')
+    const res = await createPatient({
+      clinic_id: member.clinicId,
+      name: form.name,
       species: form.species,
-      breed: form.breed.trim() || undefined,
+      breed: form.breed || undefined,
       sex: form.sex,
-      birthDate: form.birthDate || undefined,
-      birthDateEstimated: form.birthDateEstimated,
-      microchip: form.microchip.trim() || undefined,
-      ownerName: form.ownerName.trim(),
-      ownerPhone: form.ownerPhone.trim(),
-      vetId: form.vetId.trim() || undefined,
-      registeredAt: new Date().toISOString(),
+      birth_date: form.birthDate || undefined,
+      birth_date_estimated: form.birthDateEstimated,
+      microchip: form.microchip || undefined,
+      vet_id: form.vetId || undefined,
+      owner_name: form.ownerName,
+      owner_phone: form.ownerPhone || undefined,
+      owner_email: form.ownerEmail || undefined,
     })
+    setSaving(false)
+    if (!res.ok) { setError(res.error); return }
+    onSaved(res.patient)
     onClose()
   }
 
@@ -190,37 +199,47 @@ function RegistrationPanel({ onClose, onSave }: PanelProps) {
           <h2 className={styles.panelTitle}>Registrar paciente</h2>
           <button className={styles.panelClose} onClick={onClose} aria-label="Cerrar">✕</button>
         </div>
-        <form onSubmit={handleSubmit} className={styles.panelForm} noValidate>
+        <form onSubmit={(e) => void handleSubmit(e)} className={styles.panelForm} noValidate>
           <div className={styles.panelSection}>
             <h3 className={styles.panelSectionTitle}>Paciente</h3>
             <div className={styles.panelGrid}>
               <div className={styles.panelField}>
                 <label>Nombre *</label>
-                <input className={styles.panelInput} value={form.name} onChange={e => set('name', e.target.value)} placeholder="Nombre del animal" maxLength={60} />
+                <input className={styles.panelInput} value={form.name}
+                  onChange={e => set('name', e.target.value)}
+                  placeholder="Nombre del animal" maxLength={60} />
               </div>
               <div className={styles.panelField}>
                 <label>Especie *</label>
-                <select className={styles.panelInput} value={form.species} onChange={e => set('species', e.target.value as PatientSpecies)}>
+                <select className={styles.panelInput} value={form.species}
+                  onChange={e => set('species', e.target.value as PatientSpecies)}>
                   {SPECIES_OPTIONS.map(s => <option key={s} value={s}>{SPECIES_LABELS[s]}</option>)}
                 </select>
               </div>
               <div className={styles.panelField}>
                 <label>Raza</label>
-                <input className={styles.panelInput} value={form.breed} onChange={e => set('breed', e.target.value)} placeholder="Opcional" maxLength={80} />
+                <input className={styles.panelInput} value={form.breed}
+                  onChange={e => set('breed', e.target.value)}
+                  placeholder="Opcional" maxLength={80} />
               </div>
               <div className={styles.panelField}>
                 <label>Sexo</label>
-                <select className={styles.panelInput} value={form.sex} onChange={e => set('sex', e.target.value as PatientSex)}>
+                <select className={styles.panelInput} value={form.sex}
+                  onChange={e => set('sex', e.target.value as PatientSex)}>
                   {SEX_OPTIONS.map(s => <option key={s} value={s}>{SEX_LABELS[s]}</option>)}
                 </select>
               </div>
               <div className={styles.panelField}>
                 <label>Fecha de nacimiento</label>
-                <input type="date" className={styles.panelInput} value={form.birthDate} onChange={e => set('birthDate', e.target.value)} max={new Date().toISOString().split('T')[0]} />
+                <input type="date" className={styles.panelInput} value={form.birthDate}
+                  onChange={e => set('birthDate', e.target.value)}
+                  max={new Date().toISOString().split('T')[0]} />
               </div>
               <div className={styles.panelField}>
                 <label>Microchip</label>
-                <input className={styles.panelInput} value={form.microchip} onChange={e => set('microchip', e.target.value)} placeholder="ISO 11784" maxLength={20} />
+                <input className={styles.panelInput} value={form.microchip}
+                  onChange={e => set('microchip', e.target.value)}
+                  placeholder="ISO 11784" maxLength={20} />
               </div>
             </div>
           </div>
@@ -230,11 +249,21 @@ function RegistrationPanel({ onClose, onSave }: PanelProps) {
             <div className={styles.panelGrid}>
               <div className={styles.panelField}>
                 <label>Nombre *</label>
-                <input className={styles.panelInput} value={form.ownerName} onChange={e => set('ownerName', e.target.value)} placeholder="Nombre completo" maxLength={80} />
+                <input className={styles.panelInput} value={form.ownerName}
+                  onChange={e => set('ownerName', e.target.value)}
+                  placeholder="Nombre completo" maxLength={80} />
               </div>
               <div className={styles.panelField}>
                 <label>Teléfono</label>
-                <input className={styles.panelInput} value={form.ownerPhone} onChange={e => set('ownerPhone', e.target.value)} placeholder="+506 8800-0000" maxLength={20} />
+                <input className={styles.panelInput} value={form.ownerPhone}
+                  onChange={e => set('ownerPhone', e.target.value)}
+                  placeholder="+506 8800-0000" maxLength={20} />
+              </div>
+              <div className={styles.panelField} style={{ gridColumn: '1 / -1' }}>
+                <label>Correo electrónico</label>
+                <input type="email" className={styles.panelInput} value={form.ownerEmail}
+                  onChange={e => set('ownerEmail', e.target.value)}
+                  placeholder="correo@ejemplo.com" maxLength={120} />
               </div>
             </div>
           </div>
@@ -243,7 +272,9 @@ function RegistrationPanel({ onClose, onSave }: PanelProps) {
             <h3 className={styles.panelSectionTitle}>Identidad Vetra</h3>
             <div className={styles.panelField}>
               <label>ID Universal (VET-XXXXXX)</label>
-              <input className={styles.panelInput} value={form.vetId} onChange={e => set('vetId', e.target.value.toUpperCase())} placeholder="Vincular si ya existe" maxLength={12} />
+              <input className={styles.panelInput} value={form.vetId}
+                onChange={e => set('vetId', e.target.value.toUpperCase())}
+                placeholder="Vincular si ya existe" maxLength={12} />
             </div>
             <p className={styles.panelHint}>
               Si el propietario ya tiene un registro en Vetra, ingresá el ID para vincularlo.
@@ -254,7 +285,9 @@ function RegistrationPanel({ onClose, onSave }: PanelProps) {
 
           <div className={styles.panelActions}>
             <button type="button" className={styles.btnCancel} onClick={onClose}>Cancelar</button>
-            <button type="submit" className={styles.btnSave}>Registrar paciente</button>
+            <button type="submit" className={styles.btnSave} disabled={saving}>
+              {saving ? 'Guardando…' : 'Registrar paciente'}
+            </button>
           </div>
         </form>
       </aside>
@@ -268,14 +301,24 @@ type SearchMode = 'mine' | 'vetra'
 
 export default function Pacientes() {
   const navigate = useNavigate()
-  const [patients, setPatients] = useState<Patient[]>([])
+  const { member } = useClinicAuthContext()
+  const [patients, setPatients] = useState<ClinicPatient[]>([])
+  const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [speciesFilter, setSpeciesFilter] = useState<PatientSpecies | ''>('')
   const [searchMode, setSearchMode] = useState<SearchMode>('mine')
   const [showPanel, setShowPanel] = useState(false)
 
-  function handleSave(p: Patient) {
-    setPatients(prev => [p, ...prev])
+  useEffect(() => {
+    if (!member?.clinicId) return
+    void listPatients(member.clinicId).then(data => {
+      setPatients(data)
+      setLoading(false)
+    })
+  }, [member?.clinicId])
+
+  function handleSaved(p: ClinicPatient) {
+    setPatients(prev => [p, ...prev].sort((a, b) => a.name.localeCompare(b.name)))
   }
 
   const filtered = patients.filter((p) => {
@@ -283,9 +326,9 @@ export default function Pacientes() {
     if (q) {
       const match =
         p.name.toLowerCase().includes(q) ||
-        (p.vetId ?? '').toLowerCase().includes(q) ||
+        (p.vet_id ?? '').toLowerCase().includes(q) ||
         (p.microchip ?? '').includes(q) ||
-        p.ownerName.toLowerCase().includes(q)
+        p.owner_name.toLowerCase().includes(q)
       if (!match) return false
     }
     if (speciesFilter && p.species !== speciesFilter) return false
@@ -295,10 +338,9 @@ export default function Pacientes() {
   return (
     <div className={styles.page}>
       {showPanel && (
-        <RegistrationPanel onClose={() => setShowPanel(false)} onSave={handleSave} />
+        <RegistrationPanel onClose={() => setShowPanel(false)} onSaved={handleSaved} />
       )}
 
-      {/* ── Toolbar ── */}
       <div className={styles.toolbar}>
         <h1 className={styles.title}>Pacientes</h1>
         <button className={styles.btnPrimary} onClick={() => setShowPanel(true)}>
@@ -306,7 +348,6 @@ export default function Pacientes() {
         </button>
       </div>
 
-      {/* ── Search bar + filters ── */}
       <div className={styles.searchBar}>
         <input
           type="search"
@@ -327,7 +368,6 @@ export default function Pacientes() {
         </select>
       </div>
 
-      {/* ── Mode tabs ── */}
       <div className={styles.tabs}>
         <button
           className={`${styles.tab} ${searchMode === 'mine' ? styles.tabActive : ''}`}
@@ -347,7 +387,12 @@ export default function Pacientes() {
 
       {searchMode === 'mine' && (
         <>
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className={styles.empty}>
+              <span className={styles.emptyIcon}>⬡</span>
+              <p>Cargando pacientes…</p>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className={styles.empty}>
               <span className={styles.emptyIcon}>🐾</span>
               {query || speciesFilter ? (
@@ -384,8 +429,7 @@ export default function Pacientes() {
                     <tr
                       key={p.id}
                       className={styles.row}
-                      onClick={() => navigate(`/pacientes/${p.id}`, { state: { patient: p } })}
-                      style={{ cursor: 'pointer' }}
+                      onClick={() => navigate(`/pacientes/${p.id}`)}
                     >
                       <td>
                         <div className={styles.patientCell}>
@@ -402,8 +446,8 @@ export default function Pacientes() {
                       </td>
                       <td>
                         <div className={styles.ownerCell}>
-                          <span>{p.ownerName}</span>
-                          <span className={styles.phoneMeta}>{p.ownerPhone}</span>
+                          <span>{p.owner_name}</span>
+                          {p.owner_phone && <span className={styles.phoneMeta}>{p.owner_phone}</span>}
                         </div>
                       </td>
                       <td>
@@ -412,12 +456,14 @@ export default function Pacientes() {
                           : <span className={styles.na}>—</span>}
                       </td>
                       <td>
-                        {p.vetId
-                          ? <code className={styles.vetId}>{p.vetId}</code>
+                        {p.vet_id
+                          ? <code className={styles.vetId}>{p.vet_id}</code>
                           : <span className={styles.na}>—</span>}
                       </td>
                       <td className={styles.dateCell}>
-                        {new Date(p.registeredAt).toLocaleDateString('es-CR', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {new Date(p.created_at).toLocaleDateString('es-CR', {
+                          year: 'numeric', month: 'short', day: 'numeric',
+                        })}
                       </td>
                     </tr>
                   ))}
@@ -426,7 +472,7 @@ export default function Pacientes() {
             </div>
           )}
 
-          {patients.length > 0 && (
+          {patients.length > 0 && !loading && (
             <p className={styles.count}>
               {filtered.length} paciente{filtered.length !== 1 ? 's' : ''}
             </p>
