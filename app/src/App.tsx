@@ -7,11 +7,13 @@ import Mascotas from "./pages/Mascotas"
 import MascotaNueva from "./pages/MascotaNueva"
 import MascotaDetalle from "./pages/MascotaDetalle"
 import PasaportePublico from "./pages/PasaportePublico"
+import PasaporteBusqueda from "./pages/PasaporteBusqueda"
 
 function App() {
 	return (
 		<Routes>
-			{/* Public passport route — no layout chrome */}
+			{/* Public passport routes — no layout chrome */}
+			<Route path="/pasaporte" element={<PasaporteBusqueda />} />
 			<Route path="/pasaporte/:vetId" element={<PasaportePublico />} />
 			<Route element={<AppLayout />}>
 				<Route path="/" element={<Home />} />

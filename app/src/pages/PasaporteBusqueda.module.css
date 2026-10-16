@@ -1,0 +1,155 @@
+.page {
+	min-height: 100vh;
+	background: var(--color-bg);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem 1rem;
+}
+
+.card {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	overflow: hidden;
+	max-width: 380px;
+	width: 100%;
+	box-shadow: var(--shadow-lg);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+
+.header {
+	background: var(--color-accent);
+	color: #fff;
+	padding: 0.75rem 1.25rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.brand {
+	font-weight: 800;
+	font-size: 1rem;
+}
+
+.label {
+	font-size: 0.65rem;
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	opacity: 0.85;
+}
+
+/* ── Body ───────────────────────────────────────────────────────────────────── */
+
+.body {
+	padding: 2rem 1.5rem 1.5rem;
+	text-align: center;
+}
+
+.icon {
+	display: block;
+	font-size: 2.5rem;
+	margin-bottom: 0.75rem;
+}
+
+.title {
+	font-size: 1.4rem;
+	font-weight: 800;
+	margin: 0 0 0.4rem;
+	color: var(--color-text);
+}
+
+.desc {
+	font-size: 0.875rem;
+	color: var(--color-text-muted);
+	margin: 0 0 1.5rem;
+	line-height: 1.5;
+}
+
+/* ── Form ───────────────────────────────────────────────────────────────────── */
+
+.form {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	text-align: left;
+}
+
+.fieldLabel {
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: var(--color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.input {
+	width: 100%;
+	padding: 0.6rem 0.75rem;
+	font-size: 1rem;
+	font-family: "Inconsolata", monospace;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: var(--color-text);
+	background: var(--color-surface-alt);
+	border: 1.5px solid var(--color-border);
+	border-radius: var(--radius);
+	outline: none;
+	box-sizing: border-box;
+	transition: border-color 0.15s;
+}
+
+.input:focus {
+	border-color: var(--color-accent);
+}
+
+.inputError {
+	border-color: var(--color-error, #c0392b);
+}
+
+.error {
+	font-size: 0.8rem;
+	color: var(--color-error, #c0392b);
+	margin: 0;
+}
+
+.btn {
+	display: block;
+	width: 100%;
+	background: var(--color-accent);
+	color: #fff;
+	padding: 0.65rem 1.25rem;
+	border: none;
+	border-radius: var(--radius-full);
+	font-weight: 600;
+	font-size: 0.95rem;
+	cursor: pointer;
+	margin-top: 0.25rem;
+	transition: background 0.15s;
+}
+
+.btn:hover {
+	background: var(--color-accent-hover);
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────────── */
+
+.footer {
+	background: var(--color-surface-alt);
+	padding: 0.75rem 1.25rem;
+	text-align: center;
+	border-top: 1px solid var(--color-border);
+}
+
+.footerLink {
+	font-size: 0.82rem;
+	color: var(--color-accent);
+	text-decoration: none;
+	font-weight: 600;
+}
+
+.footerLink:hover {
+	text-decoration: underline;
+}
