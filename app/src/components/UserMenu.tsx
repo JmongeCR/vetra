@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useWallet } from "../hooks/useWallet"
 import { useCavosState } from "../cavos/context"
-import NetworkPill from "./NetworkPill"
 import styles from "./UserMenu.module.css"
 
 export default function UserMenu() {
@@ -32,7 +31,6 @@ export default function UserMenu() {
 
 	return (
 		<div className={styles.wrap} ref={ref}>
-			<NetworkPill />
 			<button
 				className={styles.trigger}
 				onClick={() => setOpen((o) => !o)}

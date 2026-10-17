@@ -31,22 +31,13 @@ export const WalletButton = () => {
 			)
 		}
 		return (
-			<div className="wallet-connected">
-				<button
-					className="wallet-primary"
-					onClick={cavos.signIn}
-					disabled={cavos.isLoading}
-					title="Correo o Google: crea una billetera Stellar automáticamente (Cavos)"
-				>
-					{cavos.isLoading ? "Ingresando..." : "Iniciar sesión"}
-				</button>
-				<button
-					onClick={() => void connectWallet()}
-					title="Freighter, xBull, Lobstr… (Stellar Wallets Kit)"
-				>
-					Usar billetera
-				</button>
-			</div>
+			<button
+				className="wallet-primary"
+				onClick={cavos.signIn}
+				disabled={cavos.isLoading}
+			>
+				{cavos.isLoading ? "Ingresando..." : "Iniciar sesión"}
+			</button>
 		)
 	}
 

@@ -131,9 +131,9 @@ export default function Mascotas() {
 
 	const subtitle = supabaseConfigured
 		? isAuthenticated
-			? "Identidades digitales · Supabase + Stellar Testnet"
-			: "Supabase configurado · conectá tu billetera para sincronizar"
-		: "Registros locales · Pendientes de certificación en Stellar Testnet"
+			? "Identidades digitales verificadas"
+			: "Configuración lista · iniciá sesión para sincronizar"
+		: "Registros locales · pendientes de certificación"
 
 	return (
 		<div className={styles.page}>

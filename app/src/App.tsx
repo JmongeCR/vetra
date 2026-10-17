@@ -147,18 +147,10 @@ const AppLayout = () => {
 						<Link to="/">Inicio</Link>
 						<Link to="/pasaporte">Consultar pasaporte</Link>
 						<Link to="/veterinarias">Para veterinarias</Link>
-						<a
-							href="https://developers.stellar.org"
-							target="_blank"
-							rel="noreferrer"
-						>
-							Stellar Testnet
-						</a>
 					</nav>
 				</div>
 				<div className={styles.footerBottom}>
 					<span>© 2026 Vetra</span>
-					<span className={styles.testnetBadge}>TESTNET</span>
 				</div>
 			</footer>
 		</div>

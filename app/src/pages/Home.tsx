@@ -83,7 +83,7 @@ const Home = () => {
 						</div>
 						<div className={styles.passportVerified}>
 							<span className={styles.passportVerifiedDot} />
-							Registrada en Stellar Testnet
+							Identidad verificada
 						</div>
 						<div className={styles.passportBottom}>
 							<div className={styles.qrMini}>

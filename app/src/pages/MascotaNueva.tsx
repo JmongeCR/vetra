@@ -144,7 +144,7 @@ export default function MascotaNueva() {
 			<h1 className={styles.title}>Registrar mascota</h1>
 			<p className={styles.subtitle}>
 				Se generará un identificador universal VET-XXXXXX. El registro es local
-				hasta que la identidad sea certificada en Stellar Testnet.
+				hasta que la identidad sea certificada y verificada en la red.
 			</p>
 
 			<form onSubmit={handleSubmit} className={styles.form} noValidate>
