@@ -7,7 +7,7 @@ const SCOPE_LABELS: Record<string, string> = {
   basic_data:           'Datos básicos',
   vaccines:             'Vacunas',
   medical_history:      'Historial médico',
-  shared_consultations: 'Consultas propias',
+  shared_consultations: 'Historial de otras clínicas',
   authorized_documents: 'Documentos',
 }
 
@@ -50,7 +50,7 @@ const SCOPES = [
   { id: 'basic_data',           label: 'Datos básicos',     desc: 'Nombre, especie, raza, edad, color.' },
   { id: 'vaccines',             label: 'Vacunas',           desc: 'Historial de vacunación.' },
   { id: 'medical_history',      label: 'Historial médico',  desc: 'Consultas y diagnósticos anteriores.' },
-  { id: 'shared_consultations', label: 'Consultas propias', desc: 'Las consultas registradas por esta clínica.' },
+  { id: 'shared_consultations', label: 'Historial de otras clínicas', desc: 'Permite ver el historial clínico de otras veterinarias que atendieron a esta mascota.' },
   { id: 'authorized_documents', label: 'Documentos',        desc: 'Documentos compartidos por el propietario.' },
 ]
 

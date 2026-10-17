@@ -14,7 +14,7 @@ const SCOPE_OPTIONS = [
   { id: 'basic_data',           label: 'Datos básicos' },
   { id: 'vaccines',             label: 'Vacunas' },
   { id: 'medical_history',      label: 'Historial médico' },
-  { id: 'shared_consultations', label: 'Consultas propias' },
+  { id: 'shared_consultations', label: 'Historial de otras clínicas' },
   { id: 'authorized_documents', label: 'Documentos' },
 ]
 
