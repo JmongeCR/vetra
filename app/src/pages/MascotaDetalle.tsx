@@ -4,7 +4,7 @@ import QRCode from "qrcode"
 import { getPetById } from "../services/petStorage"
 import { fetchPetById, deletePetFromDb, rollbackStellarPending } from "../services/petDb"
 import { getSignedPhotoUrl } from "../services/photoStorage"
-import { supabaseConfigured } from "../lib/supabase"
+import { supabaseConfigured, isSupabaseTokenValid } from "../lib/supabase"
 import {
 	STELLAR_STATUS_LABELS,
 	STELLAR_STATUS_DESCRIPTIONS,
@@ -13,11 +13,13 @@ import {
 	verifyAndRecoverPending,
 	recoveryMessage,
 	explorerTxUrl,
+	queryOnChainIdentity,
 	type RecoveryResult,
 } from "../services/petIdentity"
 import { SPECIES_LABELS, SEX_LABELS, SPECIES_EMOJI } from "../types/pet"
 import type { Pet } from "../types/pet"
 import { useWallet } from "../hooks/useWallet"
+import { useSupabaseAuth } from "../hooks/useSupabaseAuth"
 import styles from "./MascotaDetalle.module.css"
 
 function formatDate(iso?: string, estimated?: boolean): string {
@@ -55,6 +57,7 @@ export default function MascotaDetalle() {
 	const { id } = useParams<{ id: string }>()
 	const navigate = useNavigate()
 	const { address, signTransaction } = useWallet()
+	const { isAuthenticated } = useSupabaseAuth()
 	const [pet, setPet] = useState<Pet | null>(null)
 	const [photoSrc, setPhotoSrc] = useState<string | undefined>()
 	const [notFound, setNotFound] = useState(false)
@@ -75,11 +78,12 @@ export default function MascotaDetalle() {
 
 		async function loadPet() {
 			let found: Pet | null | undefined = null
+			let fetchedFromDb = false
 
 			if (supabaseConfigured) {
 				try {
 					found = await fetchPetById(id!)
-					if (found) setPetSource("db")
+					if (found) { setPetSource("db"); fetchedFromDb = true }
 				} catch {
 					// fall through to localStorage
 				}
@@ -93,6 +97,24 @@ export default function MascotaDetalle() {
 				setNotFound(true)
 				setLoading(false)
 				return
+			}
+
+			// When DB fetch failed and JWT is expired, the localStorage pet may have
+			// stale stellarStatus: 'local'. Query on-chain to get the real status
+			// without requiring authentication — Stellar contract reads are public.
+			if (!fetchedFromDb && supabaseConfigured && !isSupabaseTokenValid()) {
+				if (found.stellarStatus === "local") {
+					try {
+						const onChain = await queryOnChainIdentity(found.vetId)
+						if (onChain) {
+							// Pet is confirmed registered on-chain.
+							// txHash not available without DB; hide Explorer link.
+							found = { ...found, stellarStatus: "registered", stellarTxHash: undefined }
+						}
+					} catch {
+						// On-chain query failed — leave status as-is from localStorage
+					}
+				}
 			}
 
 			setPet(found)
@@ -117,7 +139,7 @@ export default function MascotaDetalle() {
 		}
 
 		void loadPet()
-	}, [id])
+	}, [id, isAuthenticated])
 
 	if (loading) return null
 
@@ -242,7 +264,7 @@ export default function MascotaDetalle() {
 										sección de identidad blockchain.
 									</p>
 								)}
-								{(pet.stellarStatus === "registered" || certTxHash) && (
+								{(pet.stellarStatus === "registered" || certTxHash) && (certTxHash ?? pet.stellarTxHash) && (
 									<a
 										href={explorerTxUrl(certTxHash ?? pet.stellarTxHash ?? "")}
 										target="_blank"
