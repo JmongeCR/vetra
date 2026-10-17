@@ -177,6 +177,12 @@ export interface AuthorizedConsultation {
     created_at: string
 }
 
+export type AuthorizedHistoryResult =
+    | { status: 'ok';             items: AuthorizedConsultation[] }
+    | { status: 'no_consent' }
+    | { status: 'not_authorized' }
+    | { status: 'error';          message: string }
+
 /**
  * Fetch consultations from other clinics for a pet identified by its
  * canonical pets.id (from consents / passport_view).
@@ -184,25 +190,29 @@ export interface AuthorizedConsultation {
  * The DB-level RPC `get_authorized_consultations` enforces:
  *   - caller is an active member of p_clinic_id
  *   - active consent with 'shared_consultations' scope exists
- * Returns [] on no-consent or any other error.
+ *
+ * Returns a tagged result so the caller can distinguish:
+ *   ok            → consent valid; items may be empty (no external consults yet)
+ *   no_consent    → owner has not granted shared_consultations access
+ *   not_authorized → caller is not a member of the clinic
+ *   error         → unexpected technical failure
  */
 export async function fetchAuthorizedHistory(
     clinicId: string,
     petId: string,
-): Promise<AuthorizedConsultation[]> {
-    if (!clinicSupabaseConfigured) return []
+): Promise<AuthorizedHistoryResult> {
+    if (!clinicSupabaseConfigured) return { status: 'error', message: 'Supabase no configurado' }
     const { data, error } = await supabase.rpc("get_authorized_consultations", {
         p_clinic_id: clinicId,
         p_pet_id: petId,
     })
     if (error) {
-        if (error.message.includes("no_consent") || error.message.includes("not_authorized")) {
-            return []
-        }
+        if (error.message.includes("no_consent"))     return { status: 'no_consent' }
+        if (error.message.includes("not_authorized")) return { status: 'not_authorized' }
         console.error("fetchAuthorizedHistory:", error.message)
-        return []
+        return { status: 'error', message: error.message }
     }
-    return (data ?? []) as AuthorizedConsultation[]
+    return { status: 'ok', items: (data ?? []) as AuthorizedConsultation[] }
 }
 
 export async function fetchClinicConsents(): Promise<ClinicConsent[]> {

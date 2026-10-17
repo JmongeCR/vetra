@@ -9,7 +9,7 @@ import {
   listTreatments, createTreatment, updateTreatmentStatus,
   type ClinicalRecord, type Consultation, type Vaccination, type Treatment,
 } from '../services/clinicalDb'
-import { searchPetByVetId, fetchAuthorizedHistory, type AuthorizedConsultation } from '../services/clinicDb'
+import { searchPetByVetId, fetchAuthorizedHistory, type AuthorizedHistoryResult } from '../services/clinicDb'
 import { useClinicAuthContext } from '../contexts/clinicAuthContext'
 import styles from './PacienteDetalle.module.css'
 
@@ -739,14 +739,13 @@ function HistorialExternoTab({
   clinicId: string
   canonicalPetId: string | null
 }) {
-  const [items, setItems]       = useState<AuthorizedConsultation[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [noConsent, setNoConsent] = useState(false)
+  const [result, setResult] = useState<AuthorizedHistoryResult | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!canonicalPetId) { setLoading(false); setNoConsent(true); return }
-    void fetchAuthorizedHistory(clinicId, canonicalPetId).then(data => {
-      setItems(data)
+    if (!canonicalPetId) { setLoading(false); return }
+    void fetchAuthorizedHistory(clinicId, canonicalPetId).then(r => {
+      setResult(r)
       setLoading(false)
     })
   }, [clinicId, canonicalPetId])
@@ -760,17 +759,50 @@ function HistorialExternoTab({
     )
   }
 
-  if (noConsent || items.length === 0) {
+  // No VET-ID → no cross-clinic identity to resolve
+  if (!canonicalPetId) {
     return (
       <div className={styles.empty}>
         <span className={styles.emptyIcon}>🔒</span>
-        <p className={styles.emptyLabel}>
-          {noConsent
-            ? 'Esta mascota no tiene VET-ID — no hay historial externo disponible.'
-            : 'Sin historial externo autorizado.'}
-        </p>
+        <p className={styles.emptyLabel}>Esta mascota no tiene VET-ID — no hay historial externo disponible.</p>
+      </div>
+    )
+  }
+
+  // Consent absent or caller not a member → access blocked
+  if (result?.status === 'no_consent' || result?.status === 'not_authorized') {
+    return (
+      <div className={styles.empty}>
+        <span className={styles.emptyIcon}>🔒</span>
+        <p className={styles.emptyLabel}>Sin historial externo autorizado.</p>
         <p className={styles.emptyNote}>
-          {!noConsent && 'El propietario debe aprobar el acceso a consultas desde MyVetra, incluyendo el scope "Consultas propias".'}
+          El propietario debe aprobar el acceso desde MyVetra, incluyendo el permiso "Historial externo" (shared_consultations).
+        </p>
+      </div>
+    )
+  }
+
+  // Technical error — show it explicitly, not as a consent problem
+  if (result?.status === 'error') {
+    return (
+      <div className={styles.empty}>
+        <span className={styles.emptyIcon}>⚠️</span>
+        <p className={styles.emptyLabel}>Error al cargar el historial externo.</p>
+        <p className={styles.emptyNote}>{result.message}</p>
+      </div>
+    )
+  }
+
+  const items = result?.status === 'ok' ? result.items : []
+
+  // Consent valid but no consultations recorded in other clinics yet
+  if (items.length === 0) {
+    return (
+      <div className={styles.empty}>
+        <span className={styles.emptyIcon}>🏥</span>
+        <p className={styles.emptyLabel}>No hay consultas de otras veterinarias.</p>
+        <p className={styles.emptyNote}>
+          El propietario autorizó el acceso, pero aún no se registraron consultas de Luna en otras clínicas.
         </p>
       </div>
     )
