@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import type { PatientSpecies, PatientSex } from '../types/patient'
 import { SPECIES_LABELS, SEX_LABELS, SPECIES_EMOJI } from '../types/patient'
 import { listPatients, createPatient, checkPatientByVetId, type ClinicPatient } from '../services/patientsDb'
-import { searchPetByVetId, createAccessRequest, type PassportData } from '../services/clinicDb'
+import { searchPetByVetId, createAccessRequest, fetchPetAccessStatus, type PassportData, type PetAccessStatus } from '../services/clinicDb'
 import { useClinicAuthContext } from '../contexts/clinicAuthContext'
 import { clinicSupabaseConfigured } from '../lib/supabase'
 import styles from './Pacientes.module.css'
@@ -28,6 +28,7 @@ function VetraSearchPanel() {
   const [requesting, setRequesting] = useState(false)
   const [requestStatus, setRequestStatus] = useState<'idle' | 'sent' | 'error'>('idle')
   const [requestError, setRequestError] = useState('')
+  const [accessStatus, setAccessStatus] = useState<PetAccessStatus>(null)
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -37,10 +38,15 @@ function VetraSearchPanel() {
     setResult(null)
     setNotFound(false)
     setRequestStatus('idle')
+    setAccessStatus(null)
     const data = await searchPetByVetId(q)
+    if (!data) { setSearching(false); setNotFound(true); return }
+    setResult(data)
+    if (member?.clinicId) {
+      const status = await fetchPetAccessStatus(member.clinicId, data.id)
+      setAccessStatus(status)
+    }
     setSearching(false)
-    if (data) setResult(data)
-    else setNotFound(true)
   }
 
   function toggleScope(id: string) {
@@ -61,7 +67,7 @@ function VetraSearchPanel() {
       message: `Solicitud desde ${member.clinicName}`,
     })
     setRequesting(false)
-    if (res.ok) setRequestStatus('sent')
+    if (res.ok) { setRequestStatus('sent'); setAccessStatus('pending') }
     else { setRequestStatus('error'); setRequestError(res.error ?? 'Error al enviar') }
   }
 
@@ -106,10 +112,20 @@ function VetraSearchPanel() {
             Stellar: <strong>{result.stellar_status}</strong>
           </p>
 
-          {requestStatus === 'sent' ? (
-            <p className={styles.vetraSuccess}>✓ Solicitud enviada. Visible en Solicitudes una vez respondida por el propietario.</p>
-          ) : !member ? (
+          {!member ? (
             <p className={styles.vetraHint}>Iniciá sesión como personal de clínica para solicitar acceso.</p>
+          ) : accessStatus === 'authorized' ? (
+            <p className={styles.vetraSuccess}>✓ Acceso autorizado por el propietario.</p>
+          ) : accessStatus === 'pending' ? (
+            <p className={styles.vetraHint}>⏳ Solicitud pendiente — esperando respuesta del propietario.</p>
+          ) : accessStatus === 'rejected' ? (
+            <p className={styles.vetraDenied}>✗ Solicitud rechazada por el propietario.</p>
+          ) : accessStatus === 'revoked' ? (
+            <p className={styles.vetraDenied}>✗ El propietario revocó el acceso.</p>
+          ) : accessStatus === 'expired' ? (
+            <p className={styles.vetraHint}>⚠️ El acceso o la solicitud venció. Podés enviar una nueva.</p>
+          ) : requestStatus === 'sent' ? (
+            <p className={styles.vetraSuccess}>✓ Solicitud enviada. Visible en Solicitudes una vez respondida.</p>
           ) : (
             <div className={styles.scopeSelector}>
               <p className={styles.scopeSelectorLabel}>Tipos de acceso a solicitar:</p>

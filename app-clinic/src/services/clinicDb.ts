@@ -94,6 +94,59 @@ export async function fetchClinicAccessRequests(
     })) as ClinicAccessRequest[]
 }
 
+/**
+ * Return the current access status for a specific (clinicId, petId) pair.
+ *
+ * Checks consents first (approved → "authorized"), then falls back to the
+ * most-recent access_request status for that pair.
+ * Returns null when no request has ever been made.
+ */
+export type PetAccessStatus =
+    | "authorized"   // active consent exists
+    | "pending"      // request submitted, owner has not acted yet
+    | "rejected"     // owner rejected the last request
+    | "expired"      // request or consent expired
+    | "revoked"      // consent was revoked by the owner
+    | null           // no request on record
+
+export async function fetchPetAccessStatus(
+    clinicId: string,
+    petId: string,
+): Promise<PetAccessStatus> {
+    if (!clinicSupabaseConfigured) return null
+
+    // 1. Check for an active consent (takes priority)
+    const { data: consent } = await supabase
+        .from("consents")
+        .select("status, expires_at")
+        .eq("clinic_id", clinicId)
+        .eq("pet_id", petId)
+        .order("granted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+    if (consent) {
+        if (consent.status === "revoked") return "revoked"
+        if (consent.status === "expired") return "expired"
+        if (consent.expires_at && new Date(consent.expires_at as string) < new Date()) return "expired"
+        if (consent.status === "active") return "authorized"
+    }
+
+    // 2. Fall back to the most recent access_request
+    const { data: request } = await supabase
+        .from("access_requests")
+        .select("status, expires_at")
+        .eq("clinic_id", clinicId)
+        .eq("pet_id", petId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+    if (!request) return null
+    if (request.expires_at && new Date(request.expires_at as string) < new Date()) return "expired"
+    return request.status as PetAccessStatus
+}
+
 export async function fetchClinicConsents(): Promise<ClinicConsent[]> {
     if (!clinicSupabaseConfigured) return []
     const { data, error } = await supabase
