@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   listAppointments, createAppointment, updateAppointment, updateAppointmentStatus,
   listStaff,
@@ -294,8 +293,6 @@ type ViewMode = 'week' | 'day' | 'month'
 
 export default function Agenda() {
   const { member } = useClinicAuthContext()
-  const navigate = useNavigate()
-
   const today = new Date()
   const [view, setView] = useState<ViewMode>('week')
   const [weekStart, setWeekStart] = useState(() => getMonday(today))

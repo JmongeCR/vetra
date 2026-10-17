@@ -11,8 +11,8 @@ import Agenda           from './pages/Agenda'
 import Pacientes        from './pages/Pacientes'
 import PacienteDetalle  from './pages/PacienteDetalle'
 import Solicitudes      from './pages/Solicitudes'
-import PersonalStub     from './pages/PersonalStub'
-import ConfiguracionStub from './pages/ConfiguracionStub'
+import Personal        from './pages/Personal'
+import Configuracion   from './pages/Configuracion'
 
 // ── Nav structure ──────────────────────────────────────────────────────────────
 
@@ -168,8 +168,8 @@ export default function App() {
           <Route path="/pacientes"         element={<Pacientes />} />
           <Route path="/pacientes/:id"     element={<PacienteDetalle />} />
           <Route path="/solicitudes"       element={<Solicitudes />} />
-          <Route path="/personal"          element={<PersonalStub />} />
-          <Route path="/configuracion"     element={<ConfiguracionStub />} />
+          <Route path="/personal"          element={<Personal />} />
+          <Route path="/configuracion"     element={<Configuracion />} />
         </Route>
       </Routes>
     </BrowserRouter>
