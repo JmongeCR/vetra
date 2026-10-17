@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { useWallet } from "../hooks/useWallet"
 import { useSupabaseAuth } from "../hooks/useSupabaseAuth"
+import { useCavosState } from "../cavos/context"
 import { getPets } from "../services/petStorage"
 import { fetchPets } from "../services/petDb"
 import { supabaseConfigured } from "../lib/supabase"
@@ -42,6 +43,8 @@ function photoSrc(pet: Pet): string | undefined {
 export default function Mascotas() {
 	const { address } = useWallet()
 	const { isAuthenticating, isAuthenticated, authError, retry } = useSupabaseAuth()
+	const cavos = useCavosState()
+	const needsDeviceApproval = cavos?.needsDeviceApproval === true
 	const [pets, setPets] = useState<Pet[]>([])
 	const [loading, setLoading] = useState(true)
 	const [dbError, setDbError] = useState<string | null>(null)
@@ -69,7 +72,62 @@ export default function Mascotas() {
 		}
 	}
 
-	useEffect(() => { void loadPets() }, [address, isAuthenticated])
+	useEffect(() => {
+		// Don't attempt to load pets when the device isn't authorized yet —
+		// Supabase auth cannot run without a valid wallet signature, so the
+		// result would always be an empty list regardless of real pet count.
+		if (needsDeviceApproval) return
+		void loadPets()
+	}, [address, isAuthenticated, needsDeviceApproval])
+
+	// Device needs passkey approval before any wallet operation can proceed.
+	// Show a dedicated screen instead of a false empty pet list.
+	if (needsDeviceApproval) {
+		return (
+			<div className={styles.page}>
+				<div className={styles.header}>
+					<div>
+						<h1 className={styles.title}>Mis mascotas</h1>
+					</div>
+				</div>
+				<div className={styles.notice}>
+					<span className={styles.noticeIcon}>🔐</span>
+					<div>
+						<strong>Este dispositivo necesita autorización</strong>
+						<p>
+							Tu cuenta Cavos está activa, pero este navegador no puede firmar
+							con tu billetera Stellar todavía. Autorizá el dispositivo con tu
+							passkey para acceder a tus mascotas.
+						</p>
+						<div style={{ display: "flex", gap: "0.75rem", marginTop: "0.75rem", flexWrap: "wrap" }}>
+							<button className={styles.btnPrimary} onClick={() => void cavos!.approveDevice()}>
+								Autorizar con passkey
+							</button>
+							<button
+								onClick={() => void cavos!.signOut()}
+								style={{
+									background: "transparent",
+									border: "1.5px solid var(--color-border)",
+									borderRadius: "var(--radius-full)",
+									padding: "0.45rem 1.1rem",
+									fontSize: "0.875rem",
+									color: "var(--color-text-muted)",
+									cursor: "pointer",
+									fontFamily: "inherit",
+								}}
+							>
+								Cerrar sesión
+							</button>
+						</div>
+						<p style={{ marginTop: "0.75rem", fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+							Si nunca registraste una passkey, cerrá sesión y volvé a ingresar con Google:
+							tu billetera y mascotas se restauran automáticamente.
+						</p>
+					</div>
+				</div>
+			</div>
+		)
+	}
 
 	const subtitle = supabaseConfigured
 		? isAuthenticated
