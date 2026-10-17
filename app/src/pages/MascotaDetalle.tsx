@@ -286,7 +286,7 @@ export default function MascotaDetalle() {
 							{STELLAR_STATUS_LABELS[pet.stellarStatus]}
 						</div>
 
-						{pet.stellarStatus === "local" && (
+						{pet.stellarStatus === "local" && (petSource === "db" || !supabaseConfigured) && (
 							<>
 								<button
 									className={styles.btnAction}
@@ -325,6 +325,11 @@ export default function MascotaDetalle() {
 									</p>
 								)}
 							</>
+						)}
+						{pet.stellarStatus === "local" && petSource === "local" && supabaseConfigured && (
+							<p className={styles.sideNote}>
+								Reconectá tu sesión para ver el estado actualizado antes de certificar.
+							</p>
 						)}
 
 						{pet.stellarStatus === "pending" && (
