@@ -92,6 +92,20 @@ export async function createPatient(
     return { ok: true, patient: data as ClinicPatient }
 }
 
+export async function checkPatientByVetId(
+    clinicId: string,
+    vetId: string,
+): Promise<{ id: string } | null> {
+    if (!clinicSupabaseConfigured) return null
+    const { data } = await supabase
+        .from("clinic_patients")
+        .select("id")
+        .eq("clinic_id", clinicId)
+        .eq("vet_id", vetId.trim().toUpperCase())
+        .maybeSingle()
+    return data ? { id: (data as { id: string }).id } : null
+}
+
 export async function updatePatient(
     id: string,
     input: Partial<Omit<CreatePatientInput, "clinic_id">>,

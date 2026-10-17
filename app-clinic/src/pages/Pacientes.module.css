@@ -449,6 +449,87 @@
 	background: var(--color-accent-hover);
 }
 
+/* ── Panel mode switcher ───────────────────────────────────────────────────── */
+
+.panelModes {
+	display: flex;
+	border-bottom: 1px solid var(--color-border);
+	background: var(--color-surface);
+	position: sticky;
+	top: 57px;
+	z-index: 1;
+}
+
+.panelModeBtn {
+	flex: 1;
+	background: transparent;
+	border: none;
+	border-bottom: 2px solid transparent;
+	margin-bottom: -1px;
+	padding: 0.7rem 0.5rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	font-family: inherit;
+	color: var(--color-text-muted);
+	cursor: pointer;
+	transition: color 0.15s, border-color 0.15s;
+}
+
+.panelModeBtn:hover { color: var(--color-text); }
+
+.panelModeBtnActive {
+	color: var(--color-accent);
+	border-bottom-color: var(--color-accent);
+}
+
+/* ── Vetra link card (read-only data) ──────────────────────────────────────── */
+
+.vetLinkCard {
+	background: var(--color-bg);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius);
+	padding: 0.875rem 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.vetLinkRow {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+}
+
+.vetLinkLabel {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--color-text-muted);
+	min-width: 80px;
+	flex-shrink: 0;
+}
+
+.vetLinkValue {
+	font-size: 0.875rem;
+	color: var(--color-text);
+}
+
+/* ── Duplicate warning ─────────────────────────────────────────────────────── */
+
+.duplicateNotice {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	background: rgba(230, 126, 34, 0.08);
+	border: 1px solid rgba(230, 126, 34, 0.3);
+	border-radius: var(--radius);
+	padding: 0.875rem 1rem;
+	margin: 0 1.5rem 1rem;
+	font-size: 0.82rem;
+}
+
+.duplicateNotice strong { color: var(--color-text); }
+.duplicateNotice span  { color: var(--color-text-muted); }
+
 /* ── Vetra search panel ────────────────────────────────────────────────────── */
 
 .vetraSearchPanel {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { PatientSpecies, PatientSex } from '../types/patient'
 import { SPECIES_LABELS, SEX_LABELS, SPECIES_EMOJI } from '../types/patient'
-import { listPatients, createPatient, type ClinicPatient } from '../services/patientsDb'
+import { listPatients, createPatient, checkPatientByVetId, type ClinicPatient } from '../services/patientsDb'
 import { searchPetByVetId, createAccessRequest, type PassportData } from '../services/clinicDb'
 import { useClinicAuthContext } from '../contexts/clinicAuthContext'
 import { clinicSupabaseConfigured } from '../lib/supabase'
@@ -151,7 +151,181 @@ interface PanelProps {
 const SPECIES_OPTIONS: PatientSpecies[] = ['dog', 'cat', 'bird', 'rabbit', 'reptile', 'other']
 const SEX_OPTIONS: PatientSex[] = ['male', 'female', 'unknown']
 
-function RegistrationPanel({ onClose, onSaved }: PanelProps) {
+// ── Mode A: link an existing Vetra pet ──────────────────────────────────────
+
+function LinkFromVetraForm({ onClose, onSaved }: PanelProps) {
+  const { member } = useClinicAuthContext()
+  const [vetIdInput, setVetIdInput] = useState('')
+  const [searching, setSearching] = useState(false)
+  const [found, setFound] = useState<PassportData | null>(null)
+  const [notFound, setNotFound] = useState(false)
+  const [duplicateId, setDuplicateId] = useState<string | null>(null)
+  const [ownerName, setOwnerName] = useState('')
+  const [ownerPhone, setOwnerPhone] = useState('')
+  const [ownerEmail, setOwnerEmail] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    const q = vetIdInput.trim().toUpperCase()
+    if (!q) return
+    setSearching(true)
+    setFound(null)
+    setNotFound(false)
+    setDuplicateId(null)
+    setError('')
+    const data = await searchPetByVetId(q)
+    if (!data) { setNotFound(true); setSearching(false); return }
+    const existing = member ? await checkPatientByVetId(member.clinicId, q) : null
+    setDuplicateId(existing?.id ?? null)
+    setFound(data)
+    setSearching(false)
+  }
+
+  async function handleLink(e: React.FormEvent) {
+    e.preventDefault()
+    if (!found || !member) return
+    if (!ownerName.trim()) { setError('El nombre del responsable es obligatorio.'); return }
+    setSaving(true)
+    setError('')
+    const res = await createPatient({
+      clinic_id: member.clinicId,
+      name: found.name,
+      species: found.species as PatientSpecies,
+      breed: found.breed ?? undefined,
+      sex: found.sex as PatientSex,
+      birth_date: found.birth_date ?? undefined,
+      birth_date_estimated: found.birth_date_estimated,
+      vet_id: found.vet_id,
+      owner_name: ownerName,
+      owner_phone: ownerPhone || undefined,
+      owner_email: ownerEmail || undefined,
+    })
+    setSaving(false)
+    if (!res.ok) { setError(res.error); return }
+    onSaved(res.patient)
+    onClose()
+  }
+
+  return (
+    <div className={styles.panelForm}>
+      <div className={styles.panelSection}>
+        <h3 className={styles.panelSectionTitle}>Buscar por VET-ID</h3>
+        <form onSubmit={(e) => void handleSearch(e)} className={styles.vetSearchForm}>
+          <input
+            className={styles.vetSearchInput}
+            value={vetIdInput}
+            onChange={e => setVetIdInput(e.target.value.toUpperCase())}
+            placeholder="VET-XXXXXXXX"
+            maxLength={20}
+          />
+          <button className={styles.btnSave} type="submit" disabled={searching}>
+            {searching ? 'Buscando…' : 'Buscar'}
+          </button>
+        </form>
+        {notFound && (
+          <p className={styles.panelHint}>No se encontró ninguna mascota con ese VET-ID en Vetra.</p>
+        )}
+        <p className={styles.panelHint}>
+          Solo se consultan datos públicos del pasaporte — ningún historial clínico.
+        </p>
+      </div>
+
+      {found && duplicateId && (
+        <div className={styles.duplicateNotice}>
+          <strong>Esta mascota ya es paciente de esta clínica.</strong>
+          <span>VET-ID {found.vet_id} ya está registrado. No se puede duplicar.</span>
+        </div>
+      )}
+
+      {found && !duplicateId && (
+        <>
+          <div className={styles.panelSection}>
+            <h3 className={styles.panelSectionTitle}>Datos de Vetra (solo lectura)</h3>
+            <div className={styles.vetLinkCard}>
+              <div className={styles.vetLinkRow}>
+                <span className={styles.vetLinkLabel}>Nombre</span>
+                <span className={styles.vetLinkValue}>{found.name}</span>
+              </div>
+              <div className={styles.vetLinkRow}>
+                <span className={styles.vetLinkLabel}>Especie</span>
+                <span className={styles.vetLinkValue}>{SPECIES_LABELS[found.species as PatientSpecies] ?? found.species}</span>
+              </div>
+              {found.breed && (
+                <div className={styles.vetLinkRow}>
+                  <span className={styles.vetLinkLabel}>Raza</span>
+                  <span className={styles.vetLinkValue}>{found.breed}</span>
+                </div>
+              )}
+              <div className={styles.vetLinkRow}>
+                <span className={styles.vetLinkLabel}>Sexo</span>
+                <span className={styles.vetLinkValue}>{SEX_LABELS[found.sex as PatientSex] ?? found.sex}</span>
+              </div>
+              {found.birth_date && (
+                <div className={styles.vetLinkRow}>
+                  <span className={styles.vetLinkLabel}>Nacimiento</span>
+                  <span className={styles.vetLinkValue}>
+                    {found.birth_date}{found.birth_date_estimated ? ' (estimada)' : ''}
+                  </span>
+                </div>
+              )}
+              <div className={styles.vetLinkRow}>
+                <span className={styles.vetLinkLabel}>VET-ID</span>
+                <code className={styles.vetIdBadge}>{found.vet_id}</code>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={(e) => void handleLink(e)} noValidate>
+            <div className={styles.panelSection}>
+              <h3 className={styles.panelSectionTitle}>Responsable (datos de la clínica)</h3>
+              <div className={styles.panelGrid}>
+                <div className={styles.panelField}>
+                  <label>Nombre *</label>
+                  <input className={styles.panelInput} value={ownerName}
+                    onChange={e => setOwnerName(e.target.value)}
+                    placeholder="Nombre completo" maxLength={80} />
+                </div>
+                <div className={styles.panelField}>
+                  <label>Teléfono</label>
+                  <input className={styles.panelInput} value={ownerPhone}
+                    onChange={e => setOwnerPhone(e.target.value)}
+                    placeholder="+506 8800-0000" maxLength={20} />
+                </div>
+                <div className={styles.panelField} style={{ gridColumn: '1 / -1' }}>
+                  <label>Correo electrónico</label>
+                  <input type="email" className={styles.panelInput} value={ownerEmail}
+                    onChange={e => setOwnerEmail(e.target.value)}
+                    placeholder="correo@ejemplo.com" maxLength={120} />
+                </div>
+              </div>
+            </div>
+
+            {error && <p className={styles.panelError}>{error}</p>}
+
+            <div className={styles.panelActions}>
+              <button type="button" className={styles.btnCancel} onClick={onClose}>Cancelar</button>
+              <button type="submit" className={styles.btnSave} disabled={saving}>
+                {saving ? 'Vinculando…' : 'Vincular como paciente'}
+              </button>
+            </div>
+          </form>
+        </>
+      )}
+
+      {!found && (
+        <div className={styles.panelActions}>
+          <button type="button" className={styles.btnCancel} onClick={onClose}>Cancelar</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Mode B: manual local registration ───────────────────────────────────────
+
+function ManualForm({ onClose, onSaved }: PanelProps) {
   const { member } = useClinicAuthContext()
   const [form, setForm] = useState({
     name: '', species: 'dog' as PatientSpecies, breed: '',
@@ -193,103 +367,132 @@ function RegistrationPanel({ onClose, onSaved }: PanelProps) {
   }
 
   return (
+    <form onSubmit={(e) => void handleSubmit(e)} className={styles.panelForm} noValidate>
+      <div className={styles.panelSection}>
+        <h3 className={styles.panelSectionTitle}>Paciente</h3>
+        <div className={styles.panelGrid}>
+          <div className={styles.panelField}>
+            <label>Nombre *</label>
+            <input className={styles.panelInput} value={form.name}
+              onChange={e => set('name', e.target.value)}
+              placeholder="Nombre del animal" maxLength={60} />
+          </div>
+          <div className={styles.panelField}>
+            <label>Especie *</label>
+            <select className={styles.panelInput} value={form.species}
+              onChange={e => set('species', e.target.value as PatientSpecies)}>
+              {SPECIES_OPTIONS.map(s => <option key={s} value={s}>{SPECIES_LABELS[s]}</option>)}
+            </select>
+          </div>
+          <div className={styles.panelField}>
+            <label>Raza</label>
+            <input className={styles.panelInput} value={form.breed}
+              onChange={e => set('breed', e.target.value)}
+              placeholder="Opcional" maxLength={80} />
+          </div>
+          <div className={styles.panelField}>
+            <label>Sexo</label>
+            <select className={styles.panelInput} value={form.sex}
+              onChange={e => set('sex', e.target.value as PatientSex)}>
+              {SEX_OPTIONS.map(s => <option key={s} value={s}>{SEX_LABELS[s]}</option>)}
+            </select>
+          </div>
+          <div className={styles.panelField}>
+            <label>Fecha de nacimiento</label>
+            <input type="date" className={styles.panelInput} value={form.birthDate}
+              onChange={e => set('birthDate', e.target.value)}
+              max={new Date().toISOString().split('T')[0]} />
+          </div>
+          <div className={styles.panelField}>
+            <label>Microchip</label>
+            <input className={styles.panelInput} value={form.microchip}
+              onChange={e => set('microchip', e.target.value)}
+              placeholder="ISO 11784" maxLength={20} />
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.panelSection}>
+        <h3 className={styles.panelSectionTitle}>Responsable</h3>
+        <div className={styles.panelGrid}>
+          <div className={styles.panelField}>
+            <label>Nombre *</label>
+            <input className={styles.panelInput} value={form.ownerName}
+              onChange={e => set('ownerName', e.target.value)}
+              placeholder="Nombre completo" maxLength={80} />
+          </div>
+          <div className={styles.panelField}>
+            <label>Teléfono</label>
+            <input className={styles.panelInput} value={form.ownerPhone}
+              onChange={e => set('ownerPhone', e.target.value)}
+              placeholder="+506 8800-0000" maxLength={20} />
+          </div>
+          <div className={styles.panelField} style={{ gridColumn: '1 / -1' }}>
+            <label>Correo electrónico</label>
+            <input type="email" className={styles.panelInput} value={form.ownerEmail}
+              onChange={e => set('ownerEmail', e.target.value)}
+              placeholder="correo@ejemplo.com" maxLength={120} />
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.panelSection}>
+        <h3 className={styles.panelSectionTitle}>Identidad Vetra (opcional)</h3>
+        <div className={styles.panelField}>
+          <label>ID Universal (VET-XXXXXX)</label>
+          <input className={styles.panelInput} value={form.vetId}
+            onChange={e => set('vetId', e.target.value.toUpperCase())}
+            placeholder="Vincular más adelante" maxLength={12} />
+        </div>
+        <p className={styles.panelHint}>
+          Podés dejarlo vacío y vincularlo luego desde la ficha del paciente.
+        </p>
+      </div>
+
+      {error && <p className={styles.panelError}>{error}</p>}
+
+      <div className={styles.panelActions}>
+        <button type="button" className={styles.btnCancel} onClick={onClose}>Cancelar</button>
+        <button type="submit" className={styles.btnSave} disabled={saving}>
+          {saving ? 'Guardando…' : 'Registrar paciente'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+// ── Panel shell with mode switcher ───────────────────────────────────────────
+
+type RegMode = 'link' | 'manual'
+
+function RegistrationPanel({ onClose, onSaved }: PanelProps) {
+  const [mode, setMode] = useState<RegMode>('link')
+
+  return (
     <div className={styles.panelOverlay} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <aside className={styles.panel}>
         <div className={styles.panelHeader}>
           <h2 className={styles.panelTitle}>Registrar paciente</h2>
           <button className={styles.panelClose} onClick={onClose} aria-label="Cerrar">✕</button>
         </div>
-        <form onSubmit={(e) => void handleSubmit(e)} className={styles.panelForm} noValidate>
-          <div className={styles.panelSection}>
-            <h3 className={styles.panelSectionTitle}>Paciente</h3>
-            <div className={styles.panelGrid}>
-              <div className={styles.panelField}>
-                <label>Nombre *</label>
-                <input className={styles.panelInput} value={form.name}
-                  onChange={e => set('name', e.target.value)}
-                  placeholder="Nombre del animal" maxLength={60} />
-              </div>
-              <div className={styles.panelField}>
-                <label>Especie *</label>
-                <select className={styles.panelInput} value={form.species}
-                  onChange={e => set('species', e.target.value as PatientSpecies)}>
-                  {SPECIES_OPTIONS.map(s => <option key={s} value={s}>{SPECIES_LABELS[s]}</option>)}
-                </select>
-              </div>
-              <div className={styles.panelField}>
-                <label>Raza</label>
-                <input className={styles.panelInput} value={form.breed}
-                  onChange={e => set('breed', e.target.value)}
-                  placeholder="Opcional" maxLength={80} />
-              </div>
-              <div className={styles.panelField}>
-                <label>Sexo</label>
-                <select className={styles.panelInput} value={form.sex}
-                  onChange={e => set('sex', e.target.value as PatientSex)}>
-                  {SEX_OPTIONS.map(s => <option key={s} value={s}>{SEX_LABELS[s]}</option>)}
-                </select>
-              </div>
-              <div className={styles.panelField}>
-                <label>Fecha de nacimiento</label>
-                <input type="date" className={styles.panelInput} value={form.birthDate}
-                  onChange={e => set('birthDate', e.target.value)}
-                  max={new Date().toISOString().split('T')[0]} />
-              </div>
-              <div className={styles.panelField}>
-                <label>Microchip</label>
-                <input className={styles.panelInput} value={form.microchip}
-                  onChange={e => set('microchip', e.target.value)}
-                  placeholder="ISO 11784" maxLength={20} />
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.panelSection}>
-            <h3 className={styles.panelSectionTitle}>Responsable</h3>
-            <div className={styles.panelGrid}>
-              <div className={styles.panelField}>
-                <label>Nombre *</label>
-                <input className={styles.panelInput} value={form.ownerName}
-                  onChange={e => set('ownerName', e.target.value)}
-                  placeholder="Nombre completo" maxLength={80} />
-              </div>
-              <div className={styles.panelField}>
-                <label>Teléfono</label>
-                <input className={styles.panelInput} value={form.ownerPhone}
-                  onChange={e => set('ownerPhone', e.target.value)}
-                  placeholder="+506 8800-0000" maxLength={20} />
-              </div>
-              <div className={styles.panelField} style={{ gridColumn: '1 / -1' }}>
-                <label>Correo electrónico</label>
-                <input type="email" className={styles.panelInput} value={form.ownerEmail}
-                  onChange={e => set('ownerEmail', e.target.value)}
-                  placeholder="correo@ejemplo.com" maxLength={120} />
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.panelSection}>
-            <h3 className={styles.panelSectionTitle}>Identidad Vetra</h3>
-            <div className={styles.panelField}>
-              <label>ID Universal (VET-XXXXXX)</label>
-              <input className={styles.panelInput} value={form.vetId}
-                onChange={e => set('vetId', e.target.value.toUpperCase())}
-                placeholder="Vincular si ya existe" maxLength={12} />
-            </div>
-            <p className={styles.panelHint}>
-              Si el propietario ya tiene un registro en Vetra, ingresá el ID para vincularlo.
-            </p>
-          </div>
-
-          {error && <p className={styles.panelError}>{error}</p>}
-
-          <div className={styles.panelActions}>
-            <button type="button" className={styles.btnCancel} onClick={onClose}>Cancelar</button>
-            <button type="submit" className={styles.btnSave} disabled={saving}>
-              {saving ? 'Guardando…' : 'Registrar paciente'}
-            </button>
-          </div>
-        </form>
+        <div className={styles.panelModes}>
+          <button
+            className={`${styles.panelModeBtn} ${mode === 'link' ? styles.panelModeBtnActive : ''}`}
+            onClick={() => setMode('link')}
+          >
+            Vincular desde Vetra
+          </button>
+          <button
+            className={`${styles.panelModeBtn} ${mode === 'manual' ? styles.panelModeBtnActive : ''}`}
+            onClick={() => setMode('manual')}
+          >
+            Registrar manualmente
+          </button>
+        </div>
+        {mode === 'link'
+          ? <LinkFromVetraForm onClose={onClose} onSaved={onSaved} />
+          : <ManualForm onClose={onClose} onSaved={onSaved} />
+        }
       </aside>
     </div>
   )
