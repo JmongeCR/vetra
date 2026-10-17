@@ -29,6 +29,7 @@ function VetraSearchPanel() {
   const [requestStatus, setRequestStatus] = useState<'idle' | 'sent' | 'error'>('idle')
   const [requestError, setRequestError] = useState('')
   const [accessStatus, setAccessStatus] = useState<PetAccessStatus>(null)
+  const [showReRequest, setShowReRequest] = useState(false)
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -39,6 +40,7 @@ function VetraSearchPanel() {
     setNotFound(false)
     setRequestStatus('idle')
     setAccessStatus(null)
+    setShowReRequest(false)
     const data = await searchPetByVetId(q)
     if (!data) { setSearching(false); setNotFound(true); return }
     setResult(data)
@@ -67,7 +69,7 @@ function VetraSearchPanel() {
       message: `Solicitud desde ${member.clinicName}`,
     })
     setRequesting(false)
-    if (res.ok) { setRequestStatus('sent'); setAccessStatus('pending') }
+    if (res.ok) { setRequestStatus('sent'); setAccessStatus('pending'); setShowReRequest(false) }
     else { setRequestStatus('error'); setRequestError(res.error ?? 'Error al enviar') }
   }
 
@@ -118,12 +120,15 @@ function VetraSearchPanel() {
             <p className={styles.vetraSuccess}>✓ Acceso autorizado por el propietario.</p>
           ) : accessStatus === 'pending' ? (
             <p className={styles.vetraHint}>⏳ Solicitud pendiente — esperando respuesta del propietario.</p>
-          ) : accessStatus === 'rejected' ? (
-            <p className={styles.vetraDenied}>✗ Solicitud rechazada por el propietario.</p>
-          ) : accessStatus === 'revoked' ? (
-            <p className={styles.vetraDenied}>✗ El propietario revocó el acceso.</p>
-          ) : accessStatus === 'expired' ? (
-            <p className={styles.vetraHint}>⚠️ El acceso o la solicitud venció. Podés enviar una nueva.</p>
+          ) : (accessStatus === 'rejected' || accessStatus === 'revoked' || accessStatus === 'expired') && !showReRequest ? (
+            <div>
+              {accessStatus === 'rejected' && <p className={styles.vetraDenied}>✗ Solicitud rechazada por el propietario.</p>}
+              {accessStatus === 'revoked'  && <p className={styles.vetraDenied}>✗ El propietario revocó el acceso.</p>}
+              {accessStatus === 'expired'  && <p className={styles.vetraHint}>⚠️ El acceso o la solicitud venció.</p>}
+              <button className={styles.btnClear} onClick={() => setShowReRequest(true)}>
+                Solicitar nuevamente
+              </button>
+            </div>
           ) : requestStatus === 'sent' ? (
             <p className={styles.vetraSuccess}>✓ Solicitud enviada. Visible en Solicitudes una vez respondida.</p>
           ) : (

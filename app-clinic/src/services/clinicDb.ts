@@ -115,33 +115,43 @@ export async function fetchPetAccessStatus(
 ): Promise<PetAccessStatus> {
     if (!clinicSupabaseConfigured) return null
 
-    // 1. Check for an active consent (takes priority)
-    const { data: consent } = await supabase
-        .from("consents")
-        .select("status, expires_at")
-        .eq("clinic_id", clinicId)
-        .eq("pet_id", petId)
-        .order("granted_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
+    const [{ data: consent }, { data: request }] = await Promise.all([
+        supabase
+            .from("consents")
+            .select("status, expires_at")
+            .eq("clinic_id", clinicId)
+            .eq("pet_id", petId)
+            .order("granted_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        supabase
+            .from("access_requests")
+            .select("status, expires_at")
+            .eq("clinic_id", clinicId)
+            .eq("pet_id", petId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+    ])
 
-    if (consent) {
-        if (consent.status === "revoked") return "revoked"
-        if (consent.status === "expired") return "expired"
-        if (consent.expires_at && new Date(consent.expires_at as string) < new Date()) return "expired"
-        if (consent.status === "active") return "authorized"
+    // 1. Active consent (not expired) takes highest priority
+    if (consent?.status === "active") {
+        if (!consent.expires_at || new Date(consent.expires_at as string) >= new Date()) {
+            return "authorized"
+        }
     }
 
-    // 2. Fall back to the most recent access_request
-    const { data: request } = await supabase
-        .from("access_requests")
-        .select("status, expires_at")
-        .eq("clinic_id", clinicId)
-        .eq("pet_id", petId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
+    // 2. Pending request overrides revoked/expired consent — clinic is waiting for a response
+    if (request?.status === "pending") return "pending"
 
+    // 3. Revoked consent
+    if (consent?.status === "revoked") return "revoked"
+
+    // 4. Expired consent
+    if (consent?.status === "expired") return "expired"
+    if (consent?.expires_at && new Date(consent.expires_at as string) < new Date()) return "expired"
+
+    // 5. Most recent access_request (rejected / expired)
     if (!request) return null
     if (request.expires_at && new Date(request.expires_at as string) < new Date()) return "expired"
     return request.status as PetAccessStatus
