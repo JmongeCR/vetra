@@ -4,15 +4,16 @@ import styles from './App.module.css'
 import { useClinicAuth } from './hooks/useClinicAuth'
 import { ClinicAuthContext } from './contexts/clinicAuthContext'
 
-import LoginPage       from './pages/LoginPage'
-import RegistrarClinica from './pages/RegistrarClinica'
-import Dashboard        from './pages/Dashboard'
-import Agenda           from './pages/Agenda'
-import Pacientes        from './pages/Pacientes'
-import PacienteDetalle  from './pages/PacienteDetalle'
-import Solicitudes      from './pages/Solicitudes'
-import Personal        from './pages/Personal'
-import Configuracion   from './pages/Configuracion'
+import LoginPage         from './pages/LoginPage'
+import RegistrarClinica  from './pages/RegistrarClinica'
+import Dashboard         from './pages/Dashboard'
+import Agenda            from './pages/Agenda'
+import Pacientes         from './pages/Pacientes'
+import PacienteDetalle   from './pages/PacienteDetalle'
+import Solicitudes       from './pages/Solicitudes'
+import Personal          from './pages/Personal'
+import Configuracion     from './pages/Configuracion'
+import AceptarInvitacion from './pages/AceptarInvitacion'
 
 // ── Nav structure ──────────────────────────────────────────────────────────────
 
@@ -162,6 +163,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Standalone route — outside AppShell to avoid needsRegistration redirect */}
+        <Route path="/unirse" element={<AceptarInvitacion />} />
+
         <Route element={<AppShell />}>
           <Route path="/"                  element={<Dashboard />} />
           <Route path="/agenda"            element={<Agenda />} />
