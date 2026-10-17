@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, Route, Routes } from "react-router-dom"
 import styles from "./App.module.css"
 import ConnectAccount from "./components/ConnectAccount"
+import UserMenu from "./components/UserMenu"
 import { useWallet } from "./hooks/useWallet"
 import Debug from "./pages/Debug"
 import Home from "./pages/Home"
@@ -127,7 +128,7 @@ const AppLayout = () => {
 					)}
 				</nav>
 
-				<ConnectAccount />
+				{address ? <UserMenu /> : <ConnectAccount />}
 			</header>
 
 			<main className={styles.main}>

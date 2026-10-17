@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { stellarNetwork } from "@stellar-scaffold/app-lib"
 import { useWallet } from "../hooks/useWallet"
 import { useSupabaseAuth } from "../hooks/useSupabaseAuth"
+import { useCavosState } from "../cavos/context"
 import { fetchProfile, updateProfile } from "../services/profileDb"
+import { explorerAccountUrl } from "../services/petIdentity"
 import { supabaseConfigured } from "../lib/supabase"
+import FundAccountButton from "../components/FundAccountButton"
 import type { Profile } from "../services/profileDb"
 import styles from "./Perfil.module.css"
 
@@ -13,8 +17,9 @@ function shortAddr(addr: string): string {
 }
 
 export default function Perfil() {
-	const { address, disconnect } = useWallet()
+	const { address, disconnect, balances, networkPassphrase } = useWallet()
 	const { isAuthenticated } = useSupabaseAuth()
+	const cavos = useCavosState()
 	const navigate = useNavigate()
 
 	const [profile, setProfile] = useState<Profile | null>(null)
@@ -64,13 +69,14 @@ export default function Perfil() {
 			})
 		: "—"
 
+	const xlmBalance = balances?.xlm?.balance ?? "—"
+	const email = cavos?.email
+
 	return (
 		<div className={styles.page}>
 			<div className={styles.pageHeader}>
 				<h1 className={styles.pageTitle}>Mi perfil</h1>
-				<p className={styles.pageSubtitle}>
-					Información de tu cuenta Vetra.
-				</p>
+				<p className={styles.pageSubtitle}>Información de tu cuenta Vetra.</p>
 			</div>
 
 			{/* Identity card */}
@@ -82,9 +88,7 @@ export default function Perfil() {
 					<div className={styles.identityName}>
 						{displayName || <span className={styles.muted}>Sin nombre</span>}
 					</div>
-					<code className={styles.stellarAddress}>
-						{address ? shortAddr(address) : "—"}
-					</code>
+					{email && <span className={styles.metaSince}>{email}</span>}
 					<div className={styles.metaRow}>
 						<span className={styles.metaBadge}>Stellar Testnet</span>
 						<span className={styles.metaSince}>Cuenta desde {since}</span>
@@ -92,18 +96,26 @@ export default function Perfil() {
 				</div>
 			</div>
 
-			{/* Edit display name */}
+			{/* A. Información personal */}
 			<div className={styles.card}>
-				<h2 className={styles.cardTitle}>Nombre visible</h2>
-				<p className={styles.cardDesc}>
-					Este nombre aparece en tu espacio personal. No es público.
-				</p>
+				<h2 className={styles.cardTitle}>Información personal</h2>
+				<dl className={styles.infoList}>
+					{email && (
+						<>
+							<dt className={styles.infoLabel}>Correo</dt>
+							<dd className={styles.infoValue}>{email}</dd>
+						</>
+					)}
+					<dt className={styles.infoLabel}>Miembro desde</dt>
+					<dd className={styles.infoValue}>{since}</dd>
+				</dl>
 				{!supabaseConfigured ? (
 					<p className={styles.notice}>
 						Configurá Supabase para guardar tu perfil entre sesiones.
 					</p>
 				) : (
 					<form onSubmit={handleSave} className={styles.form}>
+						<label className={styles.fieldLabel}>Nombre visible</label>
 						<input
 							className={styles.input}
 							type="text"
@@ -113,6 +125,9 @@ export default function Perfil() {
 							maxLength={80}
 							disabled={loading || saving}
 						/>
+						<p className={styles.fieldHint}>
+							Aparece en tu espacio personal. No es público.
+						</p>
 						{saveMsg && (
 							<p className={saveMsg.ok ? styles.msgOk : styles.msgError}>
 								{saveMsg.text}
@@ -129,27 +144,74 @@ export default function Perfil() {
 				)}
 			</div>
 
-			{/* Stellar address (read-only) */}
-			<div className={styles.card}>
-				<h2 className={styles.cardTitle}>Dirección Stellar</h2>
-				<p className={styles.cardDesc}>
-					Tu identidad en la red Stellar Testnet. Solo lectura.
-				</p>
-				<div className={styles.addressRow}>
-					<code className={styles.addressFull}>{address ?? "—"}</code>
-					{address && (
+			{/* B. Identidad digital */}
+			<div className={styles.card} id="identidad">
+				<h2 className={styles.cardTitle}>Identidad digital</h2>
+				<p className={styles.cardDesc}>Tu dirección en la red Stellar Testnet.</p>
+				<dl className={styles.infoList}>
+					<dt className={styles.infoLabel}>Estado</dt>
+					<dd className={styles.infoValue}>
+						<span className={styles.metaBadge}>Conectado · Testnet</span>
+					</dd>
+					<dt className={styles.infoLabel}>Dirección</dt>
+					<dd className={styles.infoValue}>
+						<code className={styles.addressAbbr}>{address ? shortAddr(address) : "—"}</code>
+					</dd>
+				</dl>
+				{address && (
+					<div className={styles.addressRow}>
+						<code className={styles.addressFull}>{address}</code>
 						<button
 							className={styles.btnCopy}
 							onClick={() => void navigator.clipboard.writeText(address)}
-							title="Copiar dirección"
+							title="Copiar dirección completa"
 						>
 							Copiar
 						</button>
-					)}
-				</div>
+					</div>
+				)}
+				{address && (
+					<a
+						href={explorerAccountUrl(address)}
+						target="_blank"
+						rel="noopener noreferrer"
+						className={styles.explorerLink}
+					>
+						Ver en Stellar Explorer →
+					</a>
+				)}
 			</div>
 
-			{/* Session */}
+			{/* C. Opciones avanzadas */}
+			<details className={styles.advanced}>
+				<summary className={styles.advancedSummary}>Opciones avanzadas</summary>
+				<div className={styles.advancedBody}>
+					<dl className={styles.infoList}>
+						<dt className={styles.infoLabel}>Saldo XLM</dt>
+						<dd className={styles.infoValue}>
+							<strong>{xlmBalance}</strong> XLM
+						</dd>
+						{networkPassphrase && (
+							<>
+								<dt className={styles.infoLabel}>Red</dt>
+								<dd className={styles.infoValue}>
+									<code className={styles.codeSmall}>{networkPassphrase.slice(0, 48)}…</code>
+								</dd>
+							</>
+						)}
+					</dl>
+					{stellarNetwork !== "PUBLIC" && (
+						<div className={styles.fundWrap}>
+							<p className={styles.fieldHint}>
+								Fondea tu cuenta con XLM de prueba usando Friendbot (solo Testnet).
+							</p>
+							<FundAccountButton />
+						</div>
+					)}
+				</div>
+			</details>
+
+			{/* D. Sesión */}
 			<div className={`${styles.card} ${styles.dangerCard}`}>
 				<h2 className={styles.cardTitle}>Sesión</h2>
 				<p className={styles.cardDesc}>

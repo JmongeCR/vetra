@@ -351,6 +351,20 @@
 	word-break: break-all;
 }
 
+.btnCopyInline {
+	background: none;
+	border: 1px solid var(--color-border);
+	border-radius: 4px;
+	padding: 0.1rem 0.4rem;
+	font-size: 0.65rem;
+	color: var(--color-text-muted);
+	cursor: pointer;
+	margin-left: 0.4rem;
+	font-family: inherit;
+	vertical-align: middle;
+}
+.btnCopyInline:hover { border-color: var(--color-accent); color: var(--color-accent); }
+
 /* ── Actions ───────────────────────────────────────────────────────────────── */
 
 .actionList {

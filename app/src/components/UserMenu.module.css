@@ -1,0 +1,106 @@
+.wrap {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.trigger {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-full);
+	padding: 0.3rem 0.75rem 0.3rem 0.35rem;
+	cursor: pointer;
+	font-family: inherit;
+	font-size: 0.825rem;
+	color: var(--color-text);
+	transition: border-color 0.1s, background 0.1s;
+}
+.trigger:hover {
+	border-color: var(--color-accent);
+	background: var(--color-accent-dim);
+}
+
+.avatar {
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background: var(--color-accent);
+	color: #fff;
+	font-size: 0.7rem;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.label {
+	max-width: 160px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.caret {
+	font-size: 0.65rem;
+	color: var(--color-text-muted);
+	flex-shrink: 0;
+}
+
+/* ── Dropdown ─────────────────────────────────────────────────────────────── */
+
+.dropdown {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	min-width: 180px;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+	padding: 0.4rem 0;
+	z-index: 200;
+	display: flex;
+	flex-direction: column;
+}
+
+.item {
+	padding: 0.55rem 1rem;
+	font-size: 0.875rem;
+	color: var(--color-text);
+	text-decoration: none;
+	transition: background 0.1s;
+	text-align: left;
+}
+.item:hover {
+	background: var(--color-accent-dim);
+}
+
+.divider {
+	margin: 0.3rem 0;
+	border: none;
+	border-top: 1px solid var(--color-border);
+}
+
+.itemDanger {
+	padding: 0.55rem 1rem;
+	font-size: 0.875rem;
+	color: #ef4444;
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-family: inherit;
+	text-align: left;
+	transition: background 0.1s;
+}
+.itemDanger:hover {
+	background: rgba(239, 68, 68, 0.06);
+}
+
+@media (max-width: 480px) {
+	.label { display: none; }
+}

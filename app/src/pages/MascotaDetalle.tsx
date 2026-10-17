@@ -14,6 +14,7 @@ import {
 	recoveryMessage,
 	explorerTxUrl,
 	queryOnChainIdentity,
+	PET_IDENTITY_CONTRACT_ID,
 	type RecoveryResult,
 } from "../services/petIdentity"
 import { SPECIES_LABELS, SEX_LABELS, SPECIES_EMOJI } from "../types/pet"
@@ -264,16 +265,6 @@ export default function MascotaDetalle() {
 										sección de identidad blockchain.
 									</p>
 								)}
-								{(pet.stellarStatus === "registered" || certTxHash) && (certTxHash ?? pet.stellarTxHash) && (
-									<a
-										href={explorerTxUrl(certTxHash ?? pet.stellarTxHash ?? "")}
-										target="_blank"
-										rel="noopener noreferrer"
-										className={styles.stellarNote}
-									>
-										Ver en Stellar Explorer →
-									</a>
-								)}
 							</div>
 
 							{/* QR */}
@@ -421,18 +412,46 @@ export default function MascotaDetalle() {
 							</>
 						)}
 
-						{(pet.stellarStatus === "registered" || certTxHash)
-							&& (certTxHash ?? pet.stellarTxHash) && (
+					</div>
+
+					{(pet.stellarStatus === "registered" || certTxHash)
+						&& (certTxHash ?? pet.stellarTxHash) && (
+						<div className={styles.sideCard}>
+							<h3 className={styles.sideTitle}>Verificación Stellar</h3>
+							<dl className={styles.idList}>
+								<dt>Hash de transacción</dt>
+								<dd className={styles.codeValueSmall}>
+									{(certTxHash ?? pet.stellarTxHash ?? "").slice(0, 16)}…
+									<button
+										className={styles.btnCopyInline}
+										onClick={() => void navigator.clipboard.writeText(certTxHash ?? pet.stellarTxHash ?? "")}
+										title="Copiar hash completo"
+									>
+										Copiar
+									</button>
+								</dd>
+								<dt>Contrato</dt>
+								<dd className={styles.codeValueSmall}>
+									{PET_IDENTITY_CONTRACT_ID.slice(0, 12)}…
+									<button
+										className={styles.btnCopyInline}
+										onClick={() => void navigator.clipboard.writeText(PET_IDENTITY_CONTRACT_ID)}
+										title="Copiar ID del contrato"
+									>
+										Copiar
+									</button>
+								</dd>
+							</dl>
 							<a
 								href={explorerTxUrl(certTxHash ?? pet.stellarTxHash ?? "")}
 								target="_blank"
 								rel="noopener noreferrer"
 								className={styles.sideNote}
 							>
-								Ver transacción en Stellar Explorer →
+								Ver en Stellar Explorer →
 							</a>
-						)}
-					</div>
+						</div>
+					)}
 
 					<div className={styles.sideCard}>
 						<h3 className={styles.sideTitle}>Identificadores</h3>
