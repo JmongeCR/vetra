@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import type { User } from "@supabase/supabase-js"
-import { supabase, clinicSupabaseConfigured } from "../lib/supabase"
+import { supabase, clinicSupabaseConfigured, clinicSiteUrl } from "../lib/supabase"
 
 export interface ClinicMember {
     id: string
@@ -14,11 +14,16 @@ export interface ClinicMember {
 export interface ClinicAuthState {
     user: User | null
     member: ClinicMember | null
+    /** True while recovering password (PASSWORD_RECOVERY event active) */
+    recoveryMode: boolean
     /** True when user is authenticated but has no clinic_users row */
     needsRegistration: boolean
     loading: boolean
     memberError: string | null
-    signInWithEmail: (email: string) => Promise<{ ok: boolean; error?: string }>
+    signInWithPassword: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>
+    signUp: (email: string, password: string) => Promise<{ ok: boolean; error?: string; emailConfirmationRequired?: boolean }>
+    sendPasswordReset: (email: string) => Promise<{ ok: boolean; error?: string }>
+    updatePassword: (password: string) => Promise<{ ok: boolean; error?: string }>
     signOut: () => Promise<void>
     /** Re-fetch clinic membership — call after register_clinic() succeeds */
     refreshMembership: () => Promise<void>
@@ -27,6 +32,7 @@ export interface ClinicAuthState {
 export function useClinicAuth(): ClinicAuthState {
     const [user, setUser] = useState<User | null>(null)
     const [member, setMember] = useState<ClinicMember | null>(null)
+    const [recoveryMode, setRecoveryMode] = useState(false)
     const [needsRegistration, setNeedsRegistration] = useState(false)
     const [loading, setLoading] = useState(true)
     const [memberError, setMemberError] = useState<string | null>(null)
@@ -39,7 +45,6 @@ export function useClinicAuth(): ClinicAuthState {
             .maybeSingle()
 
         if (!error && !data) {
-            // Authenticated but no clinic_users row → prompt registration
             setNeedsRegistration(true)
             setMember(null)
             setMemberError(null)
@@ -83,9 +88,19 @@ export function useClinicAuth(): ClinicAuthState {
             else setLoading(false)
         })
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             const u = session?.user ?? null
             setUser(u)
+
+            if (event === "PASSWORD_RECOVERY") {
+                // Block normal app flow while user sets a new password.
+                setRecoveryMode(true)
+                setLoading(false)
+                return
+            }
+
+            setRecoveryMode(false)
+
             if (u) {
                 void loadMembership()
             } else {
@@ -98,13 +113,44 @@ export function useClinicAuth(): ClinicAuthState {
         return () => subscription.unsubscribe()
     }, [loadMembership])
 
-    async function signInWithEmail(email: string) {
+    // ── Auth actions ─────────────────────────────────────────────────────────────
+
+    async function signInWithPassword(email: string, password: string) {
         if (!clinicSupabaseConfigured) return { ok: false, error: "Supabase no configurado" }
-        const { error } = await supabase.auth.signInWithOtp({
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) return { ok: false, error: _authError(error.message) }
+        return { ok: true }
+    }
+
+    async function signUp(email: string, password: string) {
+        if (!clinicSupabaseConfigured) return { ok: false, error: "Supabase no configurado" }
+        const { data, error } = await supabase.auth.signUp({
             email,
-            options: { shouldCreateUser: true },
+            password,
+            options: {
+                // Confirmation email will redirect back to the clinic app.
+                emailRedirectTo: clinicSiteUrl,
+            },
         })
-        if (error) return { ok: false, error: error.message }
+        if (error) return { ok: false, error: _authError(error.message) }
+        // session is null when email confirmation is required
+        const emailConfirmationRequired = !data.session
+        return { ok: true, emailConfirmationRequired }
+    }
+
+    async function sendPasswordReset(email: string) {
+        if (!clinicSupabaseConfigured) return { ok: false, error: "Supabase no configurado" }
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: clinicSiteUrl,
+        })
+        if (error) return { ok: false, error: _authError(error.message) }
+        return { ok: true }
+    }
+
+    async function updatePassword(password: string) {
+        const { error } = await supabase.auth.updateUser({ password })
+        if (error) return { ok: false, error: _authError(error.message) }
+        setRecoveryMode(false)
         return { ok: true }
     }
 
@@ -115,11 +161,32 @@ export function useClinicAuth(): ClinicAuthState {
     return {
         user,
         member,
+        recoveryMode,
         needsRegistration,
         loading,
         memberError,
-        signInWithEmail,
+        signInWithPassword,
+        signUp,
+        sendPasswordReset,
+        updatePassword,
         signOut,
         refreshMembership: loadMembership,
     }
+}
+
+// ── Error message normalization ───────────────────────────────────────────────
+
+function _authError(msg: string): string {
+    const m = msg.toLowerCase()
+    if (m.includes("invalid login credentials") || m.includes("invalid credentials"))
+        return "Correo o contraseña incorrectos."
+    if (m.includes("email not confirmed"))
+        return "Confirmá tu correo antes de ingresar. Revisá tu bandeja de entrada."
+    if (m.includes("user already registered") || m.includes("already registered"))
+        return "Ya existe una cuenta con ese correo. Iniciá sesión."
+    if (m.includes("password should be"))
+        return "La contraseña debe tener al menos 6 caracteres."
+    if (m.includes("rate limit") || m.includes("too many"))
+        return "Demasiados intentos. Esperá unos minutos."
+    return msg
 }

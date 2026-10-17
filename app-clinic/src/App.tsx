@@ -85,6 +85,15 @@ function AppShell() {
     )
   }
 
+  // PASSWORD_RECOVERY event → user must set a new password before entering the app
+  if (!auth.loading && auth.recoveryMode) {
+    return (
+      <ClinicAuthContext.Provider value={auth}>
+        <LoginPage recoveryMode />
+      </ClinicAuthContext.Provider>
+    )
+  }
+
   // Authenticated but no clinic → registration
   if (!auth.loading && auth.user && auth.needsRegistration) {
     return (
