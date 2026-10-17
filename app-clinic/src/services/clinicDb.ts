@@ -147,6 +147,54 @@ export async function fetchPetAccessStatus(
     return request.status as PetAccessStatus
 }
 
+// ── Cross-clinic history (shared_consultations scope) ────────────────────────
+
+export interface AuthorizedConsultation {
+    id: string
+    visit_date: string
+    reason: string
+    anamnesis: string | null
+    physical_exam: string | null
+    weight_kg: number | null
+    temperature_c: number | null
+    heart_rate_bpm: number | null
+    respiratory_rate: number | null
+    diagnosis: string | null
+    treatment_plan: string | null
+    observations: string | null
+    follow_up_date: string | null
+    source_clinic: string
+    created_at: string
+}
+
+/**
+ * Fetch consultations from other clinics for a pet identified by its
+ * canonical pets.id (from consents / passport_view).
+ *
+ * The DB-level RPC `get_authorized_consultations` enforces:
+ *   - caller is an active member of p_clinic_id
+ *   - active consent with 'shared_consultations' scope exists
+ * Returns [] on no-consent or any other error.
+ */
+export async function fetchAuthorizedHistory(
+    clinicId: string,
+    petId: string,
+): Promise<AuthorizedConsultation[]> {
+    if (!clinicSupabaseConfigured) return []
+    const { data, error } = await supabase.rpc("get_authorized_consultations", {
+        p_clinic_id: clinicId,
+        p_pet_id: petId,
+    })
+    if (error) {
+        if (error.message.includes("no_consent") || error.message.includes("not_authorized")) {
+            return []
+        }
+        console.error("fetchAuthorizedHistory:", error.message)
+        return []
+    }
+    return (data ?? []) as AuthorizedConsultation[]
+}
+
 export async function fetchClinicConsents(): Promise<ClinicConsent[]> {
     if (!clinicSupabaseConfigured) return []
     const { data, error } = await supabase

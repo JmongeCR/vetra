@@ -9,6 +9,7 @@ import {
   listTreatments, createTreatment, updateTreatmentStatus,
   type ClinicalRecord, type Consultation, type Vaccination, type Treatment,
 } from '../services/clinicalDb'
+import { searchPetByVetId, fetchAuthorizedHistory, type AuthorizedConsultation } from '../services/clinicDb'
 import { useClinicAuthContext } from '../contexts/clinicAuthContext'
 import styles from './PacienteDetalle.module.css'
 
@@ -730,17 +731,98 @@ function TratamientosTab({
   )
 }
 
+// ── HistorialExternoTab ───────────────────────────────────────────────────────
+
+function HistorialExternoTab({
+  clinicId, canonicalPetId,
+}: {
+  clinicId: string
+  canonicalPetId: string | null
+}) {
+  const [items, setItems]       = useState<AuthorizedConsultation[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [noConsent, setNoConsent] = useState(false)
+
+  useEffect(() => {
+    if (!canonicalPetId) { setLoading(false); setNoConsent(true); return }
+    void fetchAuthorizedHistory(clinicId, canonicalPetId).then(data => {
+      setItems(data)
+      setLoading(false)
+    })
+  }, [clinicId, canonicalPetId])
+
+  if (loading) {
+    return (
+      <div className={styles.empty}>
+        <span className={styles.emptyIcon}>⬡</span>
+        <p className={styles.emptyLabel}>Verificando autorización…</p>
+      </div>
+    )
+  }
+
+  if (noConsent || items.length === 0) {
+    return (
+      <div className={styles.empty}>
+        <span className={styles.emptyIcon}>🔒</span>
+        <p className={styles.emptyLabel}>
+          {noConsent
+            ? 'Esta mascota no tiene VET-ID — no hay historial externo disponible.'
+            : 'Sin historial externo autorizado.'}
+        </p>
+        <p className={styles.emptyNote}>
+          {!noConsent && 'El propietario debe aprobar el acceso a consultas desde MyVetra, incluyendo el scope "Consultas propias".'}
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <p className={styles.cardBody} style={{ marginBottom: '1rem', fontStyle: 'italic' }}>
+        Historial de otras clínicas — solo lectura. El propietario autorizó el acceso.
+      </p>
+      <div className={styles.cardList}>
+        {items.map(c => (
+          <div key={c.id} className={styles.card} style={{ borderLeft: '3px solid var(--color-accent)' }}>
+            <div className={styles.cardMeta}>
+              <span className={styles.cardDate}>{fmtDate(c.visit_date)}</span>
+              <span className={styles.cardStaff}>· {c.source_clinic}</span>
+            </div>
+            <p className={styles.cardTitle}>{c.reason}</p>
+            {c.diagnosis && <p className={styles.cardBody}><strong>Diagnóstico:</strong> {c.diagnosis}</p>}
+            {c.treatment_plan && <p className={styles.cardBody}><strong>Plan:</strong> {c.treatment_plan}</p>}
+            {c.anamnesis && <p className={styles.cardBody}><strong>Anamnesis:</strong> {c.anamnesis}</p>}
+            {c.physical_exam && <p className={styles.cardBody}><strong>Examen físico:</strong> {c.physical_exam}</p>}
+            {(c.weight_kg != null || c.temperature_c != null || c.heart_rate_bpm != null || c.respiratory_rate != null) && (
+              <p className={styles.cardBody}>
+                <strong>Signos:</strong>
+                {c.weight_kg != null && ` Peso ${c.weight_kg} kg`}
+                {c.temperature_c != null && ` · T° ${c.temperature_c}°C`}
+                {c.heart_rate_bpm != null && ` · FC ${c.heart_rate_bpm} bpm`}
+                {c.respiratory_rate != null && ` · FR ${c.respiratory_rate}`}
+              </p>
+            )}
+            {c.observations && <p className={styles.cardBody}><strong>Observaciones:</strong> {c.observations}</p>}
+            {c.follow_up_date && <p className={styles.cardBody}><strong>Seguimiento:</strong> {fmtDate(c.follow_up_date)}</p>}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-type TabId = 'general' | 'expediente' | 'consultas' | 'vacunacion' | 'tratamientos' | 'documentos'
+type TabId = 'general' | 'expediente' | 'consultas' | 'vacunacion' | 'tratamientos' | 'documentos' | 'historial_externo'
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'general',      label: 'Datos generales' },
-  { id: 'expediente',   label: 'Expediente' },
-  { id: 'consultas',    label: 'Consultas' },
-  { id: 'vacunacion',   label: 'Vacunación' },
-  { id: 'tratamientos', label: 'Tratamientos' },
-  { id: 'documentos',   label: 'Documentos' },
+  { id: 'general',           label: 'Datos generales' },
+  { id: 'expediente',        label: 'Expediente' },
+  { id: 'consultas',         label: 'Consultas' },
+  { id: 'vacunacion',        label: 'Vacunación' },
+  { id: 'tratamientos',      label: 'Tratamientos' },
+  { id: 'historial_externo', label: '🔍 Historial externo' },
+  { id: 'documentos',        label: 'Documentos' },
 ]
 
 export default function PacienteDetalle() {
@@ -753,6 +835,7 @@ export default function PacienteDetalle() {
   const [consultations, setConsultations] = useState<Consultation[]>([])
   const [vaccinations, setVaccinations]   = useState<Vaccination[]>([])
   const [treatments, setTreatments]       = useState<Treatment[]>([])
+  const [canonicalPetId, setCanonicalPetId] = useState<string | null>(null)
   const [loading, setLoading]             = useState(true)
   const [notFound, setNotFound]           = useState(false)
   const [activeTab, setActiveTab]         = useState<TabId>('general')
@@ -774,6 +857,12 @@ export default function PacienteDetalle() {
         setConsultations(cons)
         setVaccinations(vacc)
         setTreatments(treat)
+
+        // Resolve canonical pets.id for cross-clinic history (requires vet_id)
+        if (p.vet_id) {
+          const passport = await searchPetByVetId(p.vet_id)
+          if (passport) setCanonicalPetId(passport.id)
+        }
       }
       setLoading(false)
     })()
@@ -864,6 +953,12 @@ export default function PacienteDetalle() {
             onStatusChange={(tid, status) =>
               setTreatments(prev => prev.map(t => t.id === tid ? { ...t, status } : t))
             }
+          />
+        )}
+        {activeTab === 'historial_externo' && (
+          <HistorialExternoTab
+            clinicId={member?.clinicId ?? ''}
+            canonicalPetId={canonicalPetId}
           />
         )}
         {activeTab === 'documentos' && (
