@@ -159,6 +159,7 @@ export type RegisterOnChainError =
 	| { kind: "no_wallet" }
 	| { kind: "no_address" }
 	| { kind: "already_registered"; vetId: string }
+	| { kind: "already_pending" }
 	| { kind: "invalid_pet_id"; vetId: string }
 	| { kind: "sign_cancelled" }
 	| { kind: "network_error"; message: string }
@@ -259,10 +260,19 @@ export async function registerOnChain(
 			explorerUrl: explorerTxUrl(txHash),
 		}
 	} catch (err) {
+		const message = err instanceof Error ? err.message : String(err)
+
+		// InvalidState from claimStellarPending: the slot belongs to a previous attempt.
+		// Do NOT rollback — this is not our pending slot. Check on-chain for the real state.
+		if (message.includes("InvalidState")) {
+			const onChain = await checkPetExistsOnChain(pet.vetId).catch(() => false)
+			if (onChain) return { kind: "already_registered", vetId: pet.vetId }
+			return { kind: "already_pending" }
+		}
+
 		if (supabaseConfigured) {
 			await rollbackStellarPending(pet.id).catch(() => {})
 		}
-		const message = err instanceof Error ? err.message : String(err)
 		if (message.toLowerCase().includes("cancel") || message.toLowerCase().includes("reject")) {
 			return { kind: "sign_cancelled" }
 		}
@@ -394,6 +404,8 @@ export function registerErrorMessage(error: RegisterOnChainError): string {
 			return "Conectá tu billetera antes de registrar la identidad en Stellar."
 		case "already_registered":
 			return `El identificador ${error.vetId} ya está registrado en Stellar Testnet.`
+		case "already_pending":
+			return "Esta mascota ya tiene un registro en curso en Stellar. Usá 'Verificar estado en Stellar' para confirmar el resultado."
 		case "invalid_pet_id":
 			return `El identificador ${error.vetId} no es válido.`
 		case "sign_cancelled":

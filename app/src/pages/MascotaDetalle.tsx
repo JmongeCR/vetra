@@ -307,6 +307,12 @@ export default function MascotaDetalle() {
 												: null
 											)
 										} else {
+											// Stale local state: update UI to reflect the real DB status
+											if (result.kind === "already_registered") {
+												setPet(prev => prev ? { ...prev, stellarStatus: "registered" } : null)
+											} else if (result.kind === "already_pending") {
+												setPet(prev => prev ? { ...prev, stellarStatus: "pending" } : null)
+											}
 											setCertError(registerErrorMessage(result))
 										}
 									}}
